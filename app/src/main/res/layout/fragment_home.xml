@@ -47,7 +47,6 @@
                     android:layout_height="40dp"
                     android:src="@drawable/user_placeholder"
                     android:padding="8dp"
-                    app:tint="@color/white"
                     tools:ignore="ContentDescription"/>
 
                 <LinearLayout
@@ -92,7 +91,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:padding="8dp"
-                    app:tint="@color/mainColor"
+                    android:src="@drawable/pharmacy_tag"
                     tools:ignore="ContentDescription" />
 
                 <LinearLayout

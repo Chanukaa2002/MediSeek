@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.mediseek.R
 
 class LiveChatFragment : Fragment() {
@@ -22,7 +23,7 @@ class LiveChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<ImageButton>(R.id.back_button).setOnClickListener {
-            requireActivity().supportFragmentManager.popBackStack()
+            findNavController().navigateUp()
         }
     }
 }

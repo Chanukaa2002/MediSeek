@@ -19,18 +19,14 @@ class ClientActivity : AppCompatActivity() {
         binding = ActivityClientBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Set up navigation
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // Connect BottomNavigationView with NavController
         binding.bottomNavigationView.setupWithNavController(navController)
 
-        // Handle profile picture click
-        binding.profilePic.setOnClickListener {
-            navController.navigate(R.id.nav_profile)
-        }
+//        binding.profilePic.setOnClickListener {
+//            navController.navigate(R.id.nav_profile)
+//        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

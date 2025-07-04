@@ -12,11 +12,18 @@
         tools:layout="@layout/fragment_home"
         />
 
-<!--    <fragment-->
-<!--        android:id="@+id/nav_search"-->
-<!--        android:name="com.example.mediseek.fragments.OrderFragment"-->
-<!--        android.label="Order"-->
-<!--        tools:layout="@layout/fragment_order"-->
-<!--        />-->
+    <fragment
+        android:id="@+id/nav_search"
+        android:name="com.example.mediseek.fragments.OrderFragment"
+        android.label="Order"
+        tools:layout="@layout/fragment_order"
+        />
+
+    <fragment
+        android:id="@+id/nav_livechat"
+        android:name="com.example.mediseek.fragments.LiveChatFragment"
+        android.label="Live Chat"
+        tools:layout="@layout/fragment_livechat"
+        />
 
 </navigation>

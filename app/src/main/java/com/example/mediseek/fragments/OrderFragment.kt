@@ -24,6 +24,7 @@ class OrderFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val name = arguments?.getString("pharmacy_name") ?: "Pharmacy"
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat).setOnClickListener{
 
             findNavController().navigate(R.id.nav_livechat)

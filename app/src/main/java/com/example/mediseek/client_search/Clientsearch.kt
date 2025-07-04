@@ -1,24 +1,50 @@
 package com.example.mediseek.client_search
 
+import MedicineSearchFragment
+import PharmacySearchFragment
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.mediseek.R
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class Clientsearch : AppCompatActivity() {
-    @SuppressLint("MissingInflatedId")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+class Clientsearch : Fragment() {
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.fragment_client_search, container, false)
+
+
+    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Set up pharmacy card click
+        view.findViewById<CardView>(R.id.card_pharmacy).setOnClickListener {
+            findNavController().navigate(R.id.nav_search_pharmacy)
+        }
+
+        // Set up medicine card click
+        view.findViewById<CardView>(R.id.card_medicine).setOnClickListener {
+            findNavController().navigate(R.id.nav_search_medicine)
+        }
+
+        // Set up floating action button click (if you have one in your layout)
+        view.findViewById<FloatingActionButton>(R.id.pharmacy_chat)?.setOnClickListener {
+            findNavController().navigate(R.id.nav_livechat)
         }
     }
+
 }

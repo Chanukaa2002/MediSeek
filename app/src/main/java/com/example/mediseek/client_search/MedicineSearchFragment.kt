@@ -24,12 +24,12 @@ class MedicineSearchFragment : Fragment() {
 
 
         val pharmacyResults = listOf(
-            Pharmacy("ABC Pharmacy"),
-            Pharmacy("PQR Pharmacy"),
-            Pharmacy("XYZ Pharmacy"),
-            Pharmacy("XYZ Pharmacy"),
-            Pharmacy("XYZ Pharmacy"),
-            Pharmacy("XYZ Pharmacy")
+            Pharmacy("ABC Medicine"),
+            Pharmacy("PQR Medicine"),
+            Pharmacy("XYZ Medicine"),
+            Pharmacy("XYZ Medicine"),
+            Pharmacy("XYZ Medicine"),
+            Pharmacy("XYZ Medicine")
         )
 
 

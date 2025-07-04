@@ -13,7 +13,7 @@
         android:theme="@style/Theme.MediSeek"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".ClientActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,10 +29,6 @@
             android:name=".SignUpActivity"
             android:exported="false"
             android:theme="@style/Theme.MediSeek" />
-
-        <activity
-            android:name=".ClientActivity"
-            android:exported="false"/>
     </application>
 
 </manifest>

@@ -24,4 +24,5 @@
     <color name="text_primary">#333333</color>
     <color name="text_secondary">#666666</color>
     <color name="primary_light">#664285F4</color>
+    <color name="screen_background_light">#F5F5F5</color>
 </resources>

@@ -35,7 +35,6 @@
                 android:layout_weight="1"
                 android:src="@drawable/a001"
                 android:scaleType="fitCenter"/>
-<!--                android:contentDescription="@string/search_pharmacy_icon"/>-->
 
             <TextView
                 android:layout_width="wrap_content"

@@ -31,17 +31,14 @@ class Clientsearch : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set up pharmacy card click
         view.findViewById<CardView>(R.id.card_pharmacy).setOnClickListener {
             findNavController().navigate(R.id.nav_search_pharmacy)
         }
 
-        // Set up medicine card click
         view.findViewById<CardView>(R.id.card_medicine).setOnClickListener {
             findNavController().navigate(R.id.nav_search_medicine)
         }
 
-        // Set up floating action button click (if you have one in your layout)
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat)?.setOnClickListener {
             findNavController().navigate(R.id.nav_livechat)
         }

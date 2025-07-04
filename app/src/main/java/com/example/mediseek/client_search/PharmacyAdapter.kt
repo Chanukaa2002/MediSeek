@@ -17,7 +17,6 @@ class PharmacyAdapter(private val pharmacyList: List<Pharmacy>) :
         init {
             itemView.setOnClickListener {
                 val pharmacy = pharmacyList[adapterPosition]
-                // Navigate to OrderFragment with pharmacy name
                 itemView.findNavController().navigate(
                     R.id.action_pharmacySearchFragment_to_orderFragment,
                     Bundle().apply {

@@ -23,6 +23,10 @@ class LoginActivity : AppCompatActivity() {
         val loginButton = findViewById<MaterialButton>(R.id.login_button)
         loginButton.setOnClickListener {
             // Handle login logic here
+            val intent = Intent(this,ClientActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out)
+            finish()
         }
 
         val googleLoginButton = findViewById<MaterialButton>(R.id.google_login_button)

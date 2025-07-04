@@ -29,6 +29,10 @@
             android:name=".SignUpActivity"
             android:exported="false"
             android:theme="@style/Theme.MediSeek" />
+
+        <activity
+            android:name=".ClientActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>

@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">MediSeek</string>
+    <string name="welcome_text">Find the best Pharmacy near you</string>
+    <string name="sign_up">Sign up</string>
+    <string name="login">Login</string>
+    <string name="already_have_account">Already have an account?</string>
+
+    <string name="sign_in">Sign In</string>
+    <string name="login_to_account">Please login to your account</string>
+    <string name="username">User name</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot your password?</string>
+    <string name="sign_in_button">SIGN IN</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="create_account">Create a new account</string>
+    <string name="enter_full_name">Enter your full name</string>
+    <string name="confirm_password">Confirm your password</string>
+    <string name="sign_up_with_google">SIGN UP WITH GOOGLE</string>
 </resources>

@@ -22,6 +22,8 @@ class SignUpActivity : AppCompatActivity() {
         val signUpButton = findViewById<MaterialButton>(R.id.sign_up_button)
         signUpButton.setOnClickListener {
             // Handle sign up logic here
+            val intent = Intent(this, PhamacyActivity::class.java)
+            startActivity(intent)
         }
 
         val googleSignUpButton = findViewById<MaterialButton>(R.id.google_sign_up_button)

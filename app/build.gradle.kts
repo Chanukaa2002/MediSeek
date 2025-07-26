@@ -55,4 +55,9 @@ dependencies {
     implementation(libs.circleimageview)
     implementation(libs.material)
     implementation(libs.firebase.bom)
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
 }

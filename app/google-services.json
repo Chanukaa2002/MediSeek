@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:121816247402:android:6ade4467fe4bbf2befee13",
+        "mobilesdk_app_id": "1:121816247402:android:65eb4fc010df13f1efee13",
         "android_client_info": {
-          "package_name": "com.company.mediseek"
+          "package_name": "com.example.mediseek"
         }
       },
       "oauth_client": [

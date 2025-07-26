@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -53,4 +54,5 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.circleimageview)
     implementation(libs.material)
+    implementation(libs.firebase.bom)
 }

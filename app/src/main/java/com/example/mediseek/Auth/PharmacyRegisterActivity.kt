@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.mediseek.service.GmailSender
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +63,18 @@ class PharmacyRegisterActivity : AppCompatActivity() {
                             .addOnFailureListener { e ->
                                 showToast("Failed to save data: ${e.message}")
                             }
+                        val sendEmail = GmailSender.Email(
+                            to = email,
+                            subject = "Pharmacy Registration Under Reviewing",
+                            body = "Dear $username,\n\nYour pharmacy registration is under review. We will notify you once it is approved.\n\nThank you for registering with us!\n\nBest regards,\nThe Mediseek Team"
+                        )
+                        val adminMain = GmailSender.Email(
+                            to = "mchanuka72@gmail.com",
+                            subject = "New Pharmacy Registration",
+                            body = "A new pharmacy has registered:\n\nUsername: $username\nEmail: $email\nRegistration Number: $regNumber\n\nPlease review the registration."
+                        )
+                        GmailSender.sendEmail(sendEmail);
+                        GmailSender.sendEmail(adminMain)
                     }
                 } else {
                     showToast("Registration Failed: ${task.exception?.message}")

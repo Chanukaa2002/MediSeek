@@ -8,6 +8,14 @@ android {
     namespace = "com.example.mediseek"
     compileSdk = 35
 
+    packagingOptions {
+        exclude ("META-INF/NOTICE.md")
+        exclude ("META-INF/LICENSE.md")
+        exclude ("META-INF/INDEX.LIST")
+        // You might need to add these if you get similar errors:
+        exclude ("META-INF/DEPENDENCIES")
+        exclude ("META-INF/io.netty.versions.properties")
+    }
     defaultConfig {
         applicationId = "com.example.mediseek"
         minSdk = 24
@@ -59,5 +67,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation ("com.sun.mail:android-mail:1.6.7")
+    implementation ("com.sun.mail:android-activation:1.6.7")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
 }

@@ -73,6 +73,7 @@ class LoginActivity : AppCompatActivity() {
 
                             when (role) {
                                 "Client" -> navigateTo(ClientActivity::class.java)
+                                "Admin" -> navigateTo(AdminActivity::class.java)
 
                                 "Pharmacy" -> {
                                     if (status == "approved") {

@@ -97,6 +97,7 @@ class SignUpActivity : AppCompatActivity() {
                 when (userType) {
                     "Client" -> navigateTo(ClientActivity::class.java)
                     "Pharmacy" -> navigateTo(PhamacyActivity::class.java)
+                    "Admin" -> navigateTo(AdminActivity::class.java)
                 }
             }
             .addOnFailureListener { e ->

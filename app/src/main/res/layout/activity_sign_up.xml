@@ -105,7 +105,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Select User Type:"
+            android:text="Are you sure to Register as a Client:"
             android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/email_layout" />
@@ -127,16 +127,16 @@
                 android:layout_marginEnd="16dp"
                 android:layout_weight="1"
                 android:checked="true"
-                android:text="Client"
+                android:text="Yes"
                 android:textColor="@color/black"/>
 
-            <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/pharmacy_radio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Pharmacy"
-                android:textColor="@color/black"/>
+<!--            <com.google.android.material.radiobutton.MaterialRadioButton-->
+<!--                android:id="@+id/pharmacy_radio"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1"-->
+<!--                android:text="Pharmacy"-->
+<!--                android:textColor="@color/black"/>-->
         </RadioGroup>
 
         <!-- Password Field -->
@@ -207,7 +207,7 @@
             android:layout_height="58dp"
             android:layout_marginTop="16dp"
             android:backgroundTint="#8ADB8E"
-            android:text="SIGN UP WITH GOOGLE"
+            android:text="CLICK HERE to Register as a Pharmacy"
             android:textColor="@color/black"
             android:textAllCaps="true"
             android:drawableStart="@drawable/google"

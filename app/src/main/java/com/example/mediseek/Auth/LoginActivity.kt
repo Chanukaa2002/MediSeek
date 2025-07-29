@@ -36,7 +36,6 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // This now calls the secure login function
             loginWithUsername(username, password)
         }
 
@@ -48,9 +47,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun loginWithUsername(username: String, password: String) {
-        // Step 1: Find the user document in Firestore to get their email
         firestore.collection("Users")
-            .whereEqualTo("fullName", username)
+            .whereEqualTo("username", username) // 🔥 FIXED THIS LINE
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -58,30 +56,36 @@ class LoginActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // Get the email from the document
-                val email = documents.documents[0].getString("email")
+                val userDoc = documents.documents[0]
+                val email = userDoc.getString("email")
 
                 if (email == null) {
                     showToast("Error: Email not found for this user.")
                     return@addOnSuccessListener
                 }
 
-                // Step 2: Use the email to sign in with Firebase Authentication
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            // Login successful, currentUser is now correctly set.
                             showToast("Login Successful")
+                            val role = userDoc.getString("role")
+                            val status = userDoc.getString("status")
 
-                            // You can still use the role from the document to navigate
-                            val role = documents.documents[0].getString("role")
                             when (role) {
                                 "Client" -> navigateTo(ClientActivity::class.java)
-                                "Pharmacy" -> navigateTo(PhamacyActivity::class.java)
-                                else -> showToast("Role not found")
+
+                                "Pharmacy" -> {
+                                    if (status == "approved") {
+                                        navigateTo(PhamacyActivity::class.java)
+                                    } else {
+                                        showToast("Your account is pending approval. Please wait for admin approval.")
+                                        auth.signOut()
+                                    }
+                                }
+
+                                else -> showToast("Role not recognized")
                             }
                         } else {
-                            // This handles wrong password, etc.
                             showToast("Login Failed: ${task.exception?.message}")
                         }
                     }

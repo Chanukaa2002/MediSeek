@@ -105,8 +105,8 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun handleGoogleSignUp() {
-        showToast("Google sign up clicked")
-        // Google Sign-In implementation will be added here
+        val intent = Intent(this, PharmacyRegisterActivity::class.java)
+        startActivity(intent)
     }
 
     private fun navigateTo(activity: Class<*>) {

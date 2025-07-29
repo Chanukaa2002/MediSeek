@@ -84,7 +84,7 @@ class SignUpActivity : AppCompatActivity() {
     private fun saveUserData(userId: String, fullName: String, email: String, password: String, userType: String) {
         val userMap = hashMapOf(
             "userId" to userId,
-            "fullName" to fullName,
+            "username" to fullName,
             "email" to email,
             "password" to password,  // Note: Storing raw password is NOT recommended in production!
             "role" to userType

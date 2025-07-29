@@ -36,6 +36,10 @@
             android:name=".PhamacyActivity"
             android:exported="false"/>
         <activity android:name=".PharmacyRegisterActivity" />
+        <activity
+            android:name=".AdminActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MediSeek" />
 
     </application>
 

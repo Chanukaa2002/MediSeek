@@ -71,4 +71,6 @@ dependencies {
     implementation ("com.sun.mail:android-activation:1.6.7")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
+    implementation("androidx.recyclerview:recyclerview:1.3.2") // Use the latest version
+    implementation("androidx.cardview:cardview:1.0.0")
 }

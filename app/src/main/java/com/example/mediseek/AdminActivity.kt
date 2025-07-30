@@ -1,102 +1,100 @@
 package com.example.mediseek
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 
 class AdminActivity : AppCompatActivity() {
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: PharmacyAdapter
-    private val db = FirebaseFirestore.getInstance()
-    private val pendingPharmacies = mutableListOf<Pharmacy>()
+
+    private lateinit var db: FirebaseFirestore
+    private lateinit var adminLayout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_admin)
-        title = "Admin Interface"
 
-        recyclerView = findViewById(R.id.pharmacyRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = PharmacyAdapter()
-        recyclerView.adapter = adapter
+        title = "Admin Interface"
+        adminLayout = findViewById(R.id.adminLayout)
+        db = FirebaseFirestore.getInstance()
 
         loadPendingPharmacies()
     }
 
     private fun loadPendingPharmacies() {
-        db.collection("pharmacies")
+        db.collection("Users")
+            .whereEqualTo("role", "Pharmacy")
             .whereEqualTo("status", "pending")
             .get()
             .addOnSuccessListener { documents ->
-                pendingPharmacies.clear()
-                for (document in documents) {
-                    val pharmacy = document.toObject(Pharmacy::class.java)
-                    pharmacy.id = document.id
-                    pendingPharmacies.add(pharmacy)
+                for (doc in documents) {
+                    val username = doc.getString("username") ?: ""
+                    val registrationNumber = doc.getString("registrationNumber") ?: ""
+                    val userId = doc.id
+
+                    // Create layout for each pharmacy entry
+                    val container = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        )
+                        setPadding(10, 20, 10, 20)
+                    }
+
+                    // Pharmacy info text
+                    val infoText = TextView(this).apply {
+                        text = "$username - $registrationNumber - Approved?"
+                        layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                    }
+
+                    // Approve button
+                    val approveBtn = Button(this).apply {
+                        text = "Approve"
+                        setOnClickListener {
+                            updateStatus(userId, "approved")
+                        }
+                    }
+
+                    // No button
+                    val rejectBtn = Button(this).apply {
+                        text = "No"
+                        setOnClickListener {
+                            updateStatus(userId, "rejected")
+                        }
+                    }
+
+                    container.addView(infoText)
+                    container.addView(approveBtn)
+                    container.addView(rejectBtn)
+
+                    adminLayout.addView(container)
                 }
-                adapter.notifyDataSetChanged()
+
+                if (documents.isEmpty) {
+                    val noData = TextView(this).apply {
+                        text = "No pending pharmacies."
+                        textSize = 18f
+                        setPadding(0, 20, 0, 0)
+                    }
+                    adminLayout.addView(noData)
+                }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error loading pharmacies: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load data.", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun updatePharmacyStatus(pharmacyId: String, status: String) {
-        db.collection("pharmacies")
-            .document(pharmacyId)
-            .update("status", status)
+    private fun updateStatus(userId: String, newStatus: String) {
+        db.collection("Users").document(userId)
+            .update("status", newStatus)
             .addOnSuccessListener {
-                Toast.makeText(this, "Pharmacy $status successfully", Toast.LENGTH_SHORT).show()
-                loadPendingPharmacies() // Refresh the list
+                Toast.makeText(this, "Status updated to $newStatus", Toast.LENGTH_SHORT).show()
+                recreate() // Refresh to remove the updated entry
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error updating status: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to update status.", Toast.LENGTH_SHORT).show()
             }
-    }
-
-    inner class PharmacyAdapter : RecyclerView.Adapter<PharmacyAdapter.PharmacyViewHolder>() {
-        inner class PharmacyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val nameTextView: TextView = itemView.findViewById(R.id.pharmacyName)
-            val regNumTextView: TextView = itemView.findViewById(R.id.pharmacyRegNum)
-            val approveBtn: Button = itemView.findViewById(R.id.approveBtn)
-            val rejectBtn: Button = itemView.findViewById(R.id.rejectBtn)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PharmacyViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_pharmacy_approval, parent, false)
-            return PharmacyViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: PharmacyViewHolder, position: Int) {
-            val pharmacy = pendingPharmacies[position]
-            holder.nameTextView.text = pharmacy.name
-            holder.regNumTextView.text = pharmacy.registrationNumber
-
-            holder.approveBtn.setOnClickListener {
-                updatePharmacyStatus(pharmacy.id, "approved")
-            }
-
-            holder.rejectBtn.setOnClickListener {
-                updatePharmacyStatus(pharmacy.id, "rejected")
-            }
-        }
-
-        override fun getItemCount(): Int = pendingPharmacies.size
     }
 }
-
-data class Pharmacy(
-    var id: String = "",
-    val name: String = "",
-    val registrationNumber: String = "",
-    val status: String = "pending" // pending, approved, rejected
-)

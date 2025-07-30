@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -55,6 +56,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.runtime.android)
+    implementation(libs.play.services.recaptchabase)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,6 +72,8 @@ dependencies {
     implementation ("com.sun.mail:android-mail:1.6.7")
     implementation ("com.sun.mail:android-activation:1.6.7")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    //payment
+    implementation("com.github.PayHereDevs:payhere-android-sdk:v3.0.17")
 
     implementation("androidx.recyclerview:recyclerview:1.3.2") // Use the latest version
     implementation("androidx.cardview:cardview:1.0.0")

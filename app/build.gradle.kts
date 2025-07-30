@@ -64,7 +64,6 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.circleimageview)
     implementation(libs.material)
-    implementation(libs.firebase.bom)
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-auth")
@@ -72,6 +71,7 @@ dependencies {
     implementation ("com.sun.mail:android-mail:1.6.7")
     implementation ("com.sun.mail:android-activation:1.6.7")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("com.google.firebase:firebase-database-ktx")
     //payment
     implementation("com.github.PayHereDevs:payhere-android-sdk:v3.0.17")
 

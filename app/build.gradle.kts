@@ -75,6 +75,7 @@ dependencies {
     //payment
     implementation("com.github.PayHereDevs:payhere-android-sdk:v3.0.17")
 
-    implementation("androidx.recyclerview:recyclerview:1.3.2") // Use the latest version
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
+    implementation ("com.cloudinary:cloudinary-android:2.4.0")
 }

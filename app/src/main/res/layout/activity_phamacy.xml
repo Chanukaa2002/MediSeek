@@ -79,6 +79,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="@color/white"
+        app:itemIconTint="@color/light_gray"
+        app:itemTextColor="@color/light_gray"
         app:menu="@menu/bottom_nav_phamacy"/>
 
 </RelativeLayout>

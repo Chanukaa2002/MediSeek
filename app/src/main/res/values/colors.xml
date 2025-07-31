@@ -26,4 +26,7 @@
     <color name="primary_light">#664285F4</color>
     <color name="screen_background_light">#F5F5F5</color>
     <color name="yellow">#ebc334</color>
+    <color name="light_gray">#B0B0B0</color>
 </resources>
+
+

@@ -33,7 +33,6 @@ class AdminActivity : AppCompatActivity() {
                     val registrationNumber = doc.getString("registrationNumber") ?: ""
                     val userId = doc.id
 
-                    // Create layout for each pharmacy entry
                     val container = LinearLayout(this).apply {
                         orientation = LinearLayout.HORIZONTAL
                         layoutParams = LinearLayout.LayoutParams(
@@ -43,13 +42,11 @@ class AdminActivity : AppCompatActivity() {
                         setPadding(10, 20, 10, 20)
                     }
 
-                    // Pharmacy info text
                     val infoText = TextView(this).apply {
                         text = "$username - $registrationNumber - Approved?"
                         layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                     }
 
-                    // Approve button
                     val approveBtn = Button(this).apply {
                         text = "Approve"
                         setOnClickListener {
@@ -57,7 +54,6 @@ class AdminActivity : AppCompatActivity() {
                         }
                     }
 
-                    // No button
                     val rejectBtn = Button(this).apply {
                         text = "No"
                         setOnClickListener {
@@ -87,11 +83,43 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun updateStatus(userId: String, newStatus: String) {
-        db.collection("Users").document(userId)
-            .update("status", newStatus)
+        val userRef = db.collection("Users").document(userId)
+
+        userRef.update("status", newStatus)
             .addOnSuccessListener {
                 Toast.makeText(this, "Status updated to $newStatus", Toast.LENGTH_SHORT).show()
-                recreate() // Refresh to remove the updated entry
+
+                if (newStatus == "approved") {
+                    userRef.get().addOnSuccessListener { document ->
+                        if (document != null && document.exists()) {
+                            val username = document.getString("username") ?: ""
+                            val email = document.getString("email") ?: ""
+                            val registrationNumber = document.getString("registrationNumber") ?: ""
+
+                            val pharmacyData = hashMapOf(
+                                "username" to username,
+                                "email" to email,
+                                "registrationNumber" to registrationNumber,
+                                "userId" to userId,
+                                "stores" to emptyList<String>(), // Initially empty
+                                "Location" to "" // New field added
+                            )
+
+                            db.collection("pharmacy")
+                                .document(userId) // Use userId as document ID
+                                .set(pharmacyData)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Pharmacy record created.", Toast.LENGTH_SHORT).show()
+                                    recreate()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(this, "Failed to create pharmacy record.", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                    }
+                } else {
+                    recreate()
+                }
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to update status.", Toast.LENGTH_SHORT).show()

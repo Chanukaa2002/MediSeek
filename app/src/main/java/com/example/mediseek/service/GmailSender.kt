@@ -1,6 +1,8 @@
 package com.example.mediseek.service
 
+import android.content.Context
 import android.util.Log
+import java.io.File
 import java.util.Properties
 import javax.mail.Authenticator
 import javax.mail.Message
@@ -101,4 +103,57 @@ object GmailSender {
         )
         sendEmail(email, callback)
     }
+    fun sendEmailWithAttachment(
+        context: Context,
+        recipient: String,
+        subject: String,
+        body: String,
+        attachment: File,
+        callback: ((Boolean, String?) -> Unit)? = null
+    ) {
+        val props = Properties().apply {
+            put("mail.smtp.host", SMTP_HOST)
+            put("mail.smtp.port", SMTP_PORT)
+            put("mail.smtp.auth", "true")
+            put("mail.smtp.starttls.enable", "true")
+        }
+
+        val session = Session.getInstance(props, object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(FROM_EMAIL, FROM_PASSWORD)
+            }
+        })
+
+        Thread {
+            try {
+                val message = MimeMessage(session).apply {
+                    setFrom(InternetAddress(FROM_EMAIL))
+                    setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient))
+                    setSubject(subject)
+                }
+
+                val multipart = javax.mail.internet.MimeMultipart()
+
+                // Add body
+                val messageBodyPart = javax.mail.internet.MimeBodyPart().apply {
+                    setText(body)
+                }
+                multipart.addBodyPart(messageBodyPart)
+
+                // Add attachment
+                val attachmentBodyPart = javax.mail.internet.MimeBodyPart().apply {
+                    attachFile(attachment)
+                }
+                multipart.addBodyPart(attachmentBodyPart)
+
+                message.setContent(multipart)
+
+                Transport.send(message)
+                callback?.invoke(true, "Email with attachment sent")
+            } catch (e: MessagingException) {
+                callback?.invoke(false, "Failed: ${e.message}")
+            }
+        }.start()
+    }
+
 }

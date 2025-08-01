@@ -18,6 +18,7 @@ import com.example.mediseek.model.ChatMessage
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.database.DatabaseReference
 
 class LiveChatFragment : Fragment() {
 

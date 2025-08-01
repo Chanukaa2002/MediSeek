@@ -39,7 +39,7 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/user_placeholder"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                app:strokeColor="@color/colorPrimary"
+                app:strokeColor="@color/primary_color"
                 app:strokeWidth="2dp" />
 
             <LinearLayout

@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.play.services.recaptchabase)
+    implementation(libs.firebase.crashlytics.buildtools)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,4 +79,21 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation ("com.cloudinary:cloudinary-android:2.4.0")
+    // CameraX for modern, easy camera management
+
+    val camerax_version = "1.4.0" // Updated to a more recent stable version
+    // CameraX for modern, easy camera management
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation("com.google.guava:guava:32.1.3-android")
+
+    // Google's ML Kit for on-device Barcode (QR Code) Scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    // Coroutines for background tasks (used for the scanner)
+    val coroutines_version = "1.8.0" // Updated version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
 }

@@ -34,4 +34,10 @@
         android:name="com.example.mediseek.fragments.AddDrugFragment"
         android:label="Add Drug"
         tools:layout="@layout/fragment_add_drug" />
+
+    <fragment
+        android:id="@+id/nav_scanner"
+        android:name="com.example.mediseek.fragments.ScannerFragment"
+        android:label="Scanner"
+        tools:layout="@layout/fragment_scanner" />
 </navigation>

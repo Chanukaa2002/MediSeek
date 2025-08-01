@@ -1,8 +1,7 @@
-package com.yourcompany.yourapp
+package com.example.mediseek.fragments // Your project's package name
 
 // Android SDK Imports
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +20,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 
 // Google ML Kit and Guava Imports
 import com.google.common.util.concurrent.ListenableFuture
@@ -35,15 +35,20 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 // Project-specific Import
-import com.example.mediseek.R
-import com.example.mediseek.service.QrCodeScanListener
+import com.example.mediseek.R // Your project's R file
 
+// This version correctly uses the FragmentResult API and does not need a custom listener.
 class ScannerFragment : Fragment() {
 
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraExecutor: ExecutorService
     private var barcodeScanner: BarcodeScanner? = null
-    private var listener: QrCodeScanListener? = null
+
+    // --- Companion object for keys. This is how the two fragments communicate. ---
+    companion object {
+        const val REQUEST_KEY = "qr_scan_request"
+        const val BUNDLE_KEY = "qr_scan_result"
+    }
 
     private val cameraPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -55,21 +60,11 @@ class ScannerFragment : Fragment() {
             }
         }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is QrCodeScanListener) {
-            listener = context
-        } else if (parentFragment is QrCodeScanListener) {
-            listener = parentFragment as QrCodeScanListener
-        } else {
-            throw RuntimeException("$context or its parent must implement QrCodeScanListener")
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // The layout file name should match what you have in your res/layout folder
         return inflater.inflate(R.layout.fragment_scanner, container, false)
     }
 
@@ -140,9 +135,20 @@ class ScannerFragment : Fragment() {
             barcodeScanner?.process(image)
                 ?.addOnSuccessListener { barcodes ->
                     if (barcodes.isNotEmpty()) {
+                        // Stop analysis
                         cameraExecutor.shutdown()
                         cameraProviderFuture.get().unbindAll()
-                        listener?.onQrCodeScanned(barcodes.first().rawValue ?: "")
+
+                        // Get the result
+                        val qrValue = barcodes.first().rawValue ?: ""
+
+                        // Use Fragment Result API to send the result back to OrdersFragment
+                        setFragmentResult(REQUEST_KEY, Bundle().apply {
+                            putString(BUNDLE_KEY, qrValue)
+                        })
+
+                        // Close the scanner fragment
+                        parentFragmentManager.popBackStack()
                     }
                 }
                 ?.addOnFailureListener {
@@ -159,11 +165,6 @@ class ScannerFragment : Fragment() {
             requireContext(),
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     override fun onDestroyView() {

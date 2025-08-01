@@ -1,75 +1,102 @@
 package com.example.mediseek.fragments // Or your correct package
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-// Import other necessary UI elements if you plan to interact with them
-// import android.widget.EditText
-// import android.widget.ImageButton
-// import android.widget.ImageView
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.commit
+import androidx.fragment.app.setFragmentResultListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediseek.R
 import com.example.mediseek.adapter.OrdersAdapter // Make sure this path is correct
-import com.example.mediseek.model.Order         // Make sure this path is correct
+import com.example.mediseek.model.Order
+import androidx.navigation.fragment.findNavController
 
-// Rename this class to OrderListFragment if your tools:context is .OrderListFragment
-class OrdersFragment : Fragment() {
+// This class now handles launching the scanner and receiving the result.
+class OrdersFragment : Fragment(R.layout.fragment_orders) { // Pass layout to constructor
 
     private lateinit var ordersRecyclerView: RecyclerView
     private lateinit var ordersAdapter: OrdersAdapter
     private var orderList: MutableList<Order> = mutableListOf()
 
-    // Optional: Declare views for other UI elements if you need to interact with them
-    // private lateinit var searchEditText: EditText
-    // private lateinit var searchIconImageView: ImageView
-    // private lateinit var qrScanButton: ImageButton
+    // Declare views for UI elements
+    private lateinit var searchEditText: EditText
+    private lateinit var searchIconImageView: ImageView
+    private lateinit var qrScanButton: ImageButton
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        // This should be R.layout.fragment_orders (the XML you just provided)
-        val view = inflater.inflate(R.layout.fragment_orders, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-        // Initialize RecyclerView from the inflated view
-        ordersRecyclerView = view.findViewById(R.id.order_recycler_view) // Use the ID from your XML
+        // --- STEP 1: Set up the listener to receive the result from ScannerFragment ---
+        setFragmentResultListener(ScannerFragment.REQUEST_KEY) { _, bundle ->
+            // A result has been received from the scanner.
+            val scannedValue = bundle.getString(ScannerFragment.BUNDLE_KEY)
 
-        // Optional: Initialize other views
-        // searchEditText = view.findViewById(R.id.et_search_id)
-        // searchIconImageView = view.findViewById(R.id.iv_search_icon)
-        // qrScanButton = view.findViewById(R.id.btn_qr_scan)
+            // Populate the EditText with the scanned value.
+            searchEditText.setText(scannedValue)
 
-        return view
+            if (!scannedValue.isNullOrEmpty()) {
+                // --- NEW: Show the scanned value in a pop-up dialog ---
+                showResultDialog(scannedValue)
+            }
+            // You could also trigger a search automatically here if you wish.
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize views from the inflated layout
+        ordersRecyclerView = view.findViewById(R.id.order_recycler_view)
+        searchEditText = view.findViewById(R.id.et_search_id)
+        searchIconImageView = view.findViewById(R.id.iv_search_icon)
+        qrScanButton = view.findViewById(R.id.btn_qr_scan)
+
         setupRecyclerView()
         loadOrders()
+        setupQrScanButton() // Set up the listener for our button
+    }
 
-        // Optional: Set up listeners or logic for other UI elements
-        // setupSearchFunctionality()
-        // setupQrScanButton()
+    private fun showResultDialog(scannedValue: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("QR Code Result")
+            .setMessage("The scanned value is:\n\n$scannedValue")
+            .setPositiveButton("OK") { dialog, _ ->
+                // When the user clicks OK, populate the search bar
+                searchEditText.setText(scannedValue)
+                dialog.dismiss()
+            }
+            .setCancelable(false) // Optional: prevent dismissing by tapping outside
+            .show()
     }
 
     private fun setupRecyclerView() {
-        // Check if layoutManager is already set in XML (it is in your case)
         if (ordersRecyclerView.layoutManager == null) {
             ordersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         }
-
         ordersAdapter = OrdersAdapter(orderList)
         ordersRecyclerView.adapter = ordersAdapter
     }
 
+    // --- STEP 2: Set up the QR Scan Button's click listener ---
+    private fun setupQrScanButton() {
+        qrScanButton.setOnClickListener {
+            launchScanner()
+        }
+    }
+
+    // --- STEP 3: Logic to launch the ScannerFragment ---
+    private fun launchScanner() {
+        // Navigate to the ScannerFragment destination using its ID from the nav graph
+        findNavController().navigate(R.id.nav_scanner)
+    }
+
     private fun loadOrders() {
-        // Sample data - Replace with your actual data source
-        // Ensure your color resources (R.color.yellow, R.color.green_status, etc.) are defined
+        // This is your existing sample data logic.
         val sampleOrders = listOf(
             Order(
                 orderId = "OID : 00012",
@@ -85,7 +112,7 @@ class OrdersFragment : Fragment() {
                 totalPrice = "$15.50",
                 orderDate = "10 June, 2022",
                 status = "Delivered",
-                statusBackgroundColor = R.color.lightGreen // Define R.color.green_status
+                statusBackgroundColor = R.color.lightGreen
             ),
             Order(
                 orderId = "OID : 00010",
@@ -93,28 +120,11 @@ class OrdersFragment : Fragment() {
                 totalPrice = "$2.00",
                 orderDate = "1 June, 2022",
                 status = "Cancelled",
-                statusBackgroundColor = R.color.red // Define R.color.red_status
+                statusBackgroundColor = R.color.red
             )
         )
-
         orderList.clear()
         orderList.addAll(sampleOrders)
-        ordersAdapter.updateData(orderList)
+        ordersAdapter.updateData(orderList) // Assuming your adapter has this method
     }
-
-    // Optional: Placeholder for search functionality
-    // private fun setupSearchFunctionality() {
-    //    searchIconImageView.setOnClickListener {
-    //        val searchTerm = searchEditText.text.toString()
-    //        // Implement search logic
-    //    }
-    //    // Add TextWatcher to et_search_id for real-time search, etc.
-    // }
-
-    // Optional: Placeholder for QR scan button functionality
-    // private fun setupQrScanButton() {
-    //    qrScanButton.setOnClickListener {
-    //        // Implement QR code scanning logic
-    //    }
-    // }
 }

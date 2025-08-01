@@ -2,29 +2,52 @@ package com.example.mediseek.fragments
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.mediseek.R
+import com.example.mediseek.service.GmailSender
 import com.example.mediseek.service.PaymentHandler
+import com.example.mediseek.service.QRCodeGenerator
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.FirebaseAuth
+import lk.payhere.androidsdk.PHConstants
+import lk.payhere.androidsdk.PHResponse
+import lk.payhere.androidsdk.model.StatusResponse
 
 class OrderFragment : Fragment() {
 
     private lateinit var paymentHandler: PaymentHandler
     private lateinit var placeOrderButton: MaterialButton
+    private lateinit var currentOrderId: String
+    private lateinit var paymentLauncher: ActivityResultLauncher<Intent>
+    private lateinit var firebaseAuth: FirebaseAuth
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Initialize the activity result launcher
+        paymentLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            Log.d("OrderFragment", "Payment result received - resultCode: ${result.resultCode}")
+            handlePaymentResult(result.resultCode, result.data)
+        }
+    }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_order, container, false)
     }
@@ -32,20 +55,20 @@ class OrderFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        paymentHandler = PaymentHandler(requireContext())
+        // Initialize Firebase Auth
+        firebaseAuth = FirebaseAuth.getInstance()
+
+        paymentHandler = PaymentHandler(requireContext(), paymentLauncher)
         placeOrderButton = view.findViewById(R.id.place_order_button)
 
         val name = arguments?.getString("pharmacy_name") ?: "Pharmacy"
         view.findViewById<TextView>(R.id.pharmacy_title).text = name
 
-        // Handle chat button click
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat).setOnClickListener {
             findNavController().navigate(R.id.nav_livechat)
         }
 
-        // Handle place order button click
         placeOrderButton.setOnClickListener {
-            // Get all the form data
             val patientName = view.findViewById<EditText>(R.id.patient_name).text.toString()
             val patientAge = view.findViewById<EditText>(R.id.patient_age).text.toString()
             val collectTime = view.findViewById<EditText>(R.id.collect_time).text.toString()
@@ -53,69 +76,155 @@ class OrderFragment : Fragment() {
             val prescription = view.findViewById<EditText>(R.id.prescription).text.toString()
             val note = view.findViewById<EditText>(R.id.note).text.toString()
 
-            // Validate form
             if (patientName.isBlank() || patientAge.isBlank() || collectTime.isBlank() ||
                 collectDate.isBlank() || prescription.isBlank()) {
                 Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Disable button during payment processing
             placeOrderButton.isEnabled = false
             placeOrderButton.text = "Processing..."
 
-            // Create order summary
-            val orderDescription = "Medicine order for $patientName (Age: $patientAge)"
+            currentOrderId = "ORDER_${System.currentTimeMillis()}"
 
-            // Initiate payment
-            initiatePayment(orderDescription)
+            paymentHandler.initiateOneTimePayment(
+                merchantId = "1231446",
+                amount = 1000.0,
+                orderId = currentOrderId,
+                notifyUrl = "https://your-callback-url.com/notify"
+            )
         }
     }
 
-    private fun initiatePayment(orderDescription: String) {
-        paymentHandler.initiateOneTimePayment(
-            merchantId = "1231446", // Replace with your merchant ID
-            amount = 1000.00, // Calculate based on order
-            orderId = "ORDER_${System.currentTimeMillis()}",
-            notifyUrl = "https://your-callback-url.com/notify",
-        )
+    private fun handlePaymentResult(resultCode: Int, data: Intent?) {
+        Log.d("OrderFragment", "handlePaymentResult called with resultCode: $resultCode")
+
+        when (resultCode) {
+            Activity.RESULT_OK -> {
+                Log.d("OrderFragment", "Payment result OK")
+
+                if (data != null && data.hasExtra(PHConstants.INTENT_EXTRA_RESULT)) {
+                    try {
+                        val response = data.getSerializableExtra(PHConstants.INTENT_EXTRA_RESULT) as? PHResponse<StatusResponse>
+                        Log.d("OrderFragment", "Payment response: $response")
+
+                        if (response != null && response.isSuccess) {
+                            Log.d("OrderFragment", "Payment successful")
+                            onPaymentSuccess()
+                        } else {
+                            Log.d("OrderFragment", "Payment failed with response: $response")
+                            onPaymentFailure("Payment failed")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("OrderFragment", "Error processing payment result", e)
+                        onPaymentFailure("Error processing payment: ${e.message}")
+                    }
+                } else {
+                    // Sometimes PayHere returns OK without proper data in sandbox mode
+                    Log.d("OrderFragment", "Payment OK but no data - assuming success for sandbox")
+                    onPaymentSuccess()
+                }
+            }
+            Activity.RESULT_CANCELED -> {
+                Log.d("OrderFragment", "Payment canceled")
+                onPaymentCancel()
+            }
+            else -> {
+                Log.d("OrderFragment", "Unknown payment result: $resultCode")
+                onPaymentFailure("Unknown payment result")
+            }
+        }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    private fun onPaymentSuccess() {
+        requireActivity().runOnUiThread {
+            Log.d("OrderFragment", "Processing payment success")
 
-        paymentHandler.handlePaymentResult(
-            requestCode = requestCode,
-            resultCode = resultCode,
-            data = data,
-            onSuccess = { statusResponse ->
-                // Payment successful - show success UI
-                placeOrderButton.isEnabled = true
-                placeOrderButton.text = "Order Placed Successfully!"
-                placeOrderButton.setBackgroundColor(resources.getColor(R.color.green, null))
+            placeOrderButton.text = "Order Placed Successfully!"
+            Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
 
-                // Show success message
-                Toast.makeText(context, "Payment successful! Your order is confirmed.", Toast.LENGTH_LONG).show()
+            sendOrderQrToEmail(currentOrderId)
 
-                // Optionally clear form or show order details
-                clearForm()
-            },
-            onFailure = { errorMessage ->
-                // Payment failed - reset button
+            clearForm()
+
+            placeOrderButton.postDelayed({
                 placeOrderButton.isEnabled = true
                 placeOrderButton.text = "Place Order"
-                Toast.makeText(context, "Payment failed: $errorMessage", Toast.LENGTH_LONG).show()
-            },
-            onCancel = {
-                // Payment canceled - reset button
-                placeOrderButton.isEnabled = true
-                placeOrderButton.text = "Place Order"
-                Toast.makeText(context, "Payment canceled", Toast.LENGTH_SHORT).show()
+            }, 3000)
+        }
+    }
+
+    private fun onPaymentFailure(errorMessage: String) {
+        requireActivity().runOnUiThread {
+            placeOrderButton.isEnabled = true
+            placeOrderButton.text = "Place Order"
+            Toast.makeText(context, "Payment failed: $errorMessage", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun onPaymentCancel() {
+        requireActivity().runOnUiThread {
+            placeOrderButton.isEnabled = true
+            placeOrderButton.text = "Place Order"
+            Toast.makeText(context, "Payment canceled", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun sendOrderQrToEmail(orderId: String) {
+        try {
+            // Get current user's email from Firebase Auth
+            val currentUser = firebaseAuth.currentUser
+            val userEmail = currentUser?.email
+
+            if (userEmail.isNullOrBlank()) {
+                Log.e("OrderFragment", "No user email found, user might not be logged in")
+                Toast.makeText(context, "Unable to send email - please check your login status", Toast.LENGTH_LONG).show()
+                return
             }
-        )
+
+            Log.d("OrderFragment", "Generating QR code for order: $orderId")
+            val qrBitmap: Bitmap = QRCodeGenerator.generateQRCodeBitmap(orderId)
+            val qrFile = QRCodeGenerator.saveBitmapToFile(requireContext(), qrBitmap, "order_${orderId}.png")
+
+            val emailBody = """
+                Hello ${currentUser.displayName ?: "Customer"},
+
+                Thank you for your order. Please find your order QR code attached.
+
+                Order ID: $orderId
+
+                Please present this QR code when collecting your medication.
+
+                Regards,
+                MediSeek Team
+            """.trimIndent()
+
+            Log.d("OrderFragment", "Sending email with QR code to: $userEmail")
+            GmailSender.sendEmailWithAttachment(
+                context = requireContext(),
+                recipient = userEmail,
+                subject = "Your MediSeek Order QR Code - $orderId",
+                body = emailBody,
+                attachment = qrFile
+            ) { success, message ->
+                requireActivity().runOnUiThread {
+                    if (success) {
+                        Toast.makeText(context, "QR code sent to $userEmail successfully!", Toast.LENGTH_SHORT).show()
+                        Log.d("OrderFragment", "QR code email sent successfully for order: $orderId to $userEmail")
+                    } else {
+                        Toast.makeText(context, "Failed to send email: $message", Toast.LENGTH_LONG).show()
+                        Log.e("OrderFragment", "Failed to send QR code email: $message")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("OrderFragment", "Error generating or sending QR code: ${e.message}", e)
+            Toast.makeText(context, "Error generating QR code", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun clearForm() {
+        Log.d("OrderFragment", "Clearing form")
         view?.findViewById<EditText>(R.id.patient_name)?.text?.clear()
         view?.findViewById<EditText>(R.id.patient_age)?.text?.clear()
         view?.findViewById<EditText>(R.id.collect_time)?.text?.clear()

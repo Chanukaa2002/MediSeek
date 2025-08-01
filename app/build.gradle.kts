@@ -79,4 +79,7 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation ("com.cloudinary:cloudinary-android:2.4.0")
     implementation ("com.google.guava:guava:31.1-android")
+    implementation ("com.google.zxing:core:3.5.2")
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+
 }

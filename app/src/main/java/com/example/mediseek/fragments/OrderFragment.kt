@@ -22,6 +22,7 @@ import com.example.mediseek.service.QRCodeGenerator
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import lk.payhere.androidsdk.PHConstants
 import lk.payhere.androidsdk.PHResponse
 import lk.payhere.androidsdk.model.StatusResponse
@@ -143,7 +144,53 @@ class OrderFragment : Fragment() {
             placeOrderButton.text = "Order Placed Successfully!"
             Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
 
-            sendOrderQrToEmail(currentOrderId)
+            // Get form data
+            val patientName = view?.findViewById<EditText>(R.id.patient_name)?.text.toString()
+            val patientAge = view?.findViewById<EditText>(R.id.patient_age)?.text.toString()
+            val collectTime = view?.findViewById<EditText>(R.id.collect_time)?.text.toString()
+            val collectDate = view?.findViewById<EditText>(R.id.collect_date)?.text.toString()
+            val prescription = view?.findViewById<EditText>(R.id.prescription)?.text.toString()
+            val note = view?.findViewById<EditText>(R.id.note)?.text.toString()
+            val pharmacyName = arguments?.getString("pharmacy_name") ?: "Pharmacy"
+
+            // Get current user info
+            val currentUser = firebaseAuth.currentUser
+            val userId = currentUser?.uid ?: ""
+            val userEmail = currentUser?.email ?: ""
+            val userName = currentUser?.displayName ?: ""
+
+            // Create order data
+            val orderData = hashMapOf(
+                "orderId" to currentOrderId,
+                "userId" to userId,
+                "userEmail" to userEmail,
+                "pharmacyName" to pharmacyName,
+                "patientName" to patientName,
+                "patientAge" to patientAge,
+                "collectTime" to collectTime,
+                "collectDate" to collectDate,
+                "prescription" to prescription,
+                "note" to note,
+                "amount" to 1000.0,
+                "paymentStatus" to "completed",
+                "collected" to false,
+                "createdAt" to com.google.firebase.Timestamp.now(),
+                "updatedAt" to com.google.firebase.Timestamp.now()
+            )
+
+            // Add to Firestore
+            FirebaseFirestore.getInstance().collection("Orders")
+                .document(currentOrderId)
+                .set(orderData)
+                .addOnSuccessListener {
+                    Log.d("OrderFragment", "Order document successfully written!")
+                    sendOrderQrToEmail(currentOrderId)
+                }
+                .addOnFailureListener { e ->
+                    Log.w("OrderFragment", "Error writing order document", e)
+                    Toast.makeText(context, "Order placed but failed to save details", Toast.LENGTH_SHORT).show()
+                    sendOrderQrToEmail(currentOrderId) // Still send email even if Firestore fails
+                }
 
             clearForm()
 

@@ -82,5 +82,8 @@ dependencies {
     implementation ("com.google.zxing:core:3.5.2")
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+
+
 
 }

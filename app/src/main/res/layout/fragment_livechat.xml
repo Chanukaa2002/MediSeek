@@ -70,8 +70,20 @@
             android:hint="Chat with a pharmacy..."
             android:inputType="textCapSentences"
             android:maxLines="4"
-            android:padding="12dp" />
+            android:padding="12dp"
+            />
 
+        <!-- Attachment Button -->
+        <ImageButton
+            android:id="@+id/attach_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_attach"
+            app:tint="@color/bg_gradient_end" />
+
+        <!-- Send Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/send_chat_button"
             style="@style/Widget.MaterialComponents.Button.Icon"
@@ -82,7 +94,8 @@
             app:cornerRadius="24dp"
             app:icon="@android:drawable/ic_menu_send"
             app:iconGravity="textStart"
-            app:iconPadding="0dp" />
+            app:iconPadding="0dp"
+            android:tint="@color/bg_gradient_end"/>
 
     </LinearLayout>
 
@@ -96,5 +109,15 @@
         android:padding="8dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_message_sent" />
+    <ProgressBar
+        android:id="@+id/uploadProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_above="@id/chat_input_area"
+        android:visibility="gone"
+        android:indeterminate="true"
+        android:progressBackgroundTint="@color/lightGray"
+        android:progressTint="@color/colorPrimary"/>
 
 </RelativeLayout>

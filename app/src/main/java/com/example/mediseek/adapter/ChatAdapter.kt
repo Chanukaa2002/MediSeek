@@ -1,5 +1,6 @@
 package com.example.mediseek.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -43,6 +44,7 @@ class ChatAdapter(private var messages: List<ChatMessage>) : RecyclerView.Adapte
 
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val message = messages[position]
+        Log.d("ChatAdapter", "Binding message: ${message.text}")
         holder.messageText.text = message.text
         holder.timeText.text = dateFormat.format(Date(message.timestamp))
     }

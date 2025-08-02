@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "121816247402-e9m1hact0j50pttivkp407aj0co13pg4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mediseek",
+            "certificate_hash": "644da63b60154d651eaa251c4cd9c2e47d6d5db2"
+          }
+        },
+        {
           "client_id": "121816247402-nrf45ebml6gat0pn01r1nm2vv5boaief.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

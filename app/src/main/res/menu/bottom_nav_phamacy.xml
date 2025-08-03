@@ -7,17 +7,17 @@
         android:title= "Home"/>
 
     <item
-        android:id="@+id/nav_search"
+        android:id="@+id/nav_orders"
         android:icon="@drawable/order"
         android:title= "Orders"/>
 
     <item
-        android:id="@+id/nav_fav"
+        android:id="@+id/nav_products"
         android:icon="@drawable/store"
         android:title= "Store"/>
 
     <item
-        android:id="@+id/nav_profile"
+        android:id="@+id/nav_chat"
         android:icon="@drawable/chat"
         android:title= "Chat"/>
 

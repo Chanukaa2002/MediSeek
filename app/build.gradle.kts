@@ -86,4 +86,21 @@ dependencies {
 
 
 
+    // CameraX for modern, easy camera management
+
+    val camerax_version = "1.4.0" // Updated to a more recent stable version
+    // CameraX for modern, easy camera management
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+    implementation("com.google.guava:guava:32.1.3-android")
+
+    // Google's ML Kit for on-device Barcode (QR Code) Scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+
+    // Coroutines for background tasks (used for the scanner)
+    val coroutines_version = "1.8.0" // Updated version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
 }

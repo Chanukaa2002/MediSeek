@@ -68,7 +68,7 @@ class LiveChatFragment : Fragment() {
                 return
             }
 
-            val pharmacyId = "Demo_PID" // Replace with actual pharmacy ID logic
+            val pharmacyId = "8dJivB4LICOAzuwwCSTcsy3WkoR2"
             val patientId = auth.currentUser?.uid
 
             chatId = if (patientId != null && pharmacyId.isNotEmpty()) {

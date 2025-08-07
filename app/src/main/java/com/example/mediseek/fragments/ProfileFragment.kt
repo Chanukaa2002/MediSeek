@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.mediseek.LoginActivity
 import com.example.mediseek.databinding.FragmentProfileBinding
 import com.example.mediseek.service.ImageService
 import com.google.firebase.auth.FirebaseAuth
@@ -92,7 +93,26 @@ class ProfileFragment : Fragment() {
                 updateUserProfile()
             }
         }
+
+        binding.logoutButton.setOnClickListener {
+            logoutUser()
+        }
     }
+
+    private fun logoutUser() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Logout")
+            .setMessage("Are you sure you want to logout?")
+            .setPositiveButton("Yes") { _, _ ->
+                auth.signOut()
+                val intent = Intent(requireContext(), LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
 
     private fun showImageSelectionDialog() {
         val options = arrayOf<CharSequence>("Take Photo", "Choose from Gallery", "Cancel")

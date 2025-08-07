@@ -105,4 +105,6 @@ dependencies {
 
     // Location services (optional but recommended for getting the user's current location)
     implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }

@@ -172,11 +172,11 @@ class AddMedicineActivity : AppCompatActivity() {
             "SupD" to supplyDateEditText.text.toString(),
             "EXD" to expireDateEditText.text.toString(),
             "pharmacyId" to pharmacyId,
-            "status" to "In Stock", // Default status
-            "qty" to 100 // Default quantity, you can add a field for this
+            "status" to "Out of Stock", // Default status
+            "qty" to 0 // Default quantity, you can add a field for this
         )
 
-        db.collection("medicines").document("product").collection("items")
+        db.collection("medicines")
             .add(medicineData)
             .addOnSuccessListener {
                 // progressBar.visibility = View.GONE

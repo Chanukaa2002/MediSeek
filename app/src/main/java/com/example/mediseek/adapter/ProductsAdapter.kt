@@ -7,14 +7,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide // Import Glide
 import com.example.mediseek.R
-// Import YOUR Product data class
-import com.example.mediseek.model.Product // <--- Make sure this import is correct
+import com.example.mediseek.model.Product
 
-// Remove or comment out the Google Analytics product import if it exists:
-// import com.google.android.gms.analytics.ecommerce.Product <--- REMOVE THIS IF PRESENT
-
-class ProductsAdapter(private var products: List<Product>) : // <--- CHANGE THIS LINE
+class ProductsAdapter(private var products: List<Product>) :
     RecyclerView.Adapter<ProductsAdapter.ProductViewHolder>() {
 
     class ProductViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -26,30 +23,26 @@ class ProductsAdapter(private var products: List<Product>) : // <--- CHANGE THIS
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val itemView = LayoutInflater.from(parent.context)
-            .inflate(R.layout.products_list, parent, false)
+            .inflate(R.layout.products_list, parent, false) // Ensure this layout file name is correct
         return ProductViewHolder(itemView)
     }
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
-        val currentProduct = products[position] // currentProduct is now of type com.example.mediseek.models.Product
+        val currentProduct = products[position]
 
-        // This should now resolve correctly:
-        holder.productImageView.setImageResource(currentProduct.imageName)
-
-        // If you were planning to use imageUrl for Glide, it would be:
-        // if (currentProduct.imageUrl != null) { // Assuming your Product model might have imageUrl
-        //     Glide.with(holder.itemView.context)
-        //        .load(currentProduct.imageUrl)
-        //        .placeholder(R.drawable.ordersimg)
-        //        .error(R.drawable.ic_error_placeholder)
-        //        .into(holder.productImageView)
-        // } else {
-        //     holder.productImageView.setImageResource(R.drawable.ordersimg) // Fallback if no imageUrl
-        // }
-
+        // Set text data
         holder.productNameTextView.text = currentProduct.name
         holder.stockStatusTextView.text = currentProduct.stockStatus
         holder.productPriceTextView.text = currentProduct.price
+
+        // --- FIXED: Load image from URL using Glide ---
+        // This handles downloading, resizing, and caching the image automatically.
+        Glide.with(holder.itemView.context)
+            .load(currentProduct.imgURL) // Load the image URL (String)
+            .centerCrop() // Scale the image to fit the view, cropping if needed
+            .placeholder(R.drawable.ic_add_photo) // Optional: show a placeholder while loading
+            .error(R.drawable.ic_add_photo) // Optional: show an error image if loading fails
+            .into(holder.productImageView) // The target ImageView
 
         // Optional: Dynamically change stock status text color
         if (currentProduct.stockStatus.equals("IN STOCK", ignoreCase = true)) {
@@ -61,9 +54,8 @@ class ProductsAdapter(private var products: List<Product>) : // <--- CHANGE THIS
 
     override fun getItemCount() = products.size
 
-    // This function also needs to accept your custom Product type
-    fun updateData(newProducts: List<Product>) { // <--- And this line
+    fun updateData(newProducts: List<Product>) {
         products = newProducts
-        notifyDataSetChanged() // Consider using DiffUtil for better performance
+        notifyDataSetChanged()
     }
 }

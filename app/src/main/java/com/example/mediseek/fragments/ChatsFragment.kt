@@ -13,6 +13,8 @@ import com.example.mediseek.adapter.ChatListAdapter
 import com.example.mediseek.model.ChatItem
 import com.google.firebase.database.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
+
 
 class ChatsFragment : Fragment() {
 
@@ -52,12 +54,13 @@ class ChatsFragment : Fragment() {
     }
 
     private fun loadChatList() {
+        val currentPharmacyId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
         realtimeDb.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 chatList.clear()
 
                 if (!snapshot.exists()) {
-                    // Show "No chats" UI
                     chatRecyclerView.visibility = View.GONE
                     tvNoChats.visibility = View.VISIBLE
                     return
@@ -65,9 +68,17 @@ class ChatsFragment : Fragment() {
 
                 for (chatSnapshot in snapshot.children) {
                     val chatId = chatSnapshot.key ?: continue
-                    val userId = chatId.substringAfter("_") // Extract userId from Demo_PID_xxx
 
-                    firestore.collection("Users").document(userId)
+                    // Split into pharmacyId and clientId
+                    val parts = chatId.split("_")
+                    if (parts.size != 2) continue
+                    val pharmacyId = parts[0]
+                    val clientId = parts[1]
+
+                    // Only include chats for the current pharmacy
+                    if (pharmacyId != currentPharmacyId) continue
+
+                    firestore.collection("Users").document(clientId)
                         .get()
                         .addOnSuccessListener { document ->
                             if (document.exists()) {
@@ -78,7 +89,7 @@ class ChatsFragment : Fragment() {
                                 }
 
                                 val chatItem = ChatItem(
-                                    userId = userId,
+                                    userId = clientId,
                                     username = username,
                                     profileImageUrl = profileImage,
                                     hasNewMessage = hasNewMessage
@@ -86,7 +97,6 @@ class ChatsFragment : Fragment() {
                                 chatList.add(chatItem)
                                 chatAdapter.updateList(chatList)
 
-                                // Update visibility
                                 chatRecyclerView.visibility = View.VISIBLE
                                 tvNoChats.visibility = View.GONE
                             }
@@ -94,7 +104,9 @@ class ChatsFragment : Fragment() {
                 }
             }
 
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+            }
         })
     }
+
 }

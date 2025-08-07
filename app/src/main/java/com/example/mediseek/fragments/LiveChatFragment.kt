@@ -68,7 +68,7 @@ class LiveChatFragment : Fragment() {
                 return
             }
 
-            val pharmacyId = "8dJivB4LICOAzuwwCSTcsy3WkoR2"
+            val pharmacyId = "6UZnsULIzLe8KgxyUWAMC5MdlWp1"
             val patientId = auth.currentUser?.uid
 
             chatId = if (patientId != null && pharmacyId.isNotEmpty()) {

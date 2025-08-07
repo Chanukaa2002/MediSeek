@@ -1,38 +1,45 @@
 package com.example.mediseek.fragments
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediseek.R
 import com.example.mediseek.adapter.ProductsAdapter // Import your adapter
 import com.example.mediseek.model.Product         // Import your Product model
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-class ProductsFragment : Fragment() {
+// This is the corrected fragment that handles both the product list and navigation.
+class ProductsFragment : Fragment(R.layout.fragment_products) {
 
     private lateinit var productsRecyclerView: RecyclerView
     private lateinit var productsAdapter: ProductsAdapter
-    private var productList: MutableList<Product> = mutableListOf() // Initialize an empty list
+    private var productList: MutableList<Product> = mutableListOf()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_products, container, false)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // Initialize RecyclerView from the inflated view
         productsRecyclerView = view.findViewById(R.id.product_recycler_view)
 
-        return view
-    }
+        // --- FIX: Added navigation logic ---
+        // Find the FloatingActionButton
+        val addDrugButton = view.findViewById<FloatingActionButton>(R.id.add_drug_button)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        // Set the click listener to navigate to the AddDrugFragment
+        addDrugButton.setOnClickListener {
+            parentFragmentManager.commit {
+                setReorderingAllowed(true)
+                // Replace the current fragment with AddDrugFragment
+                // R.id.fragment_container should be the ID of the FragmentContainerView in your host activity
+                replace(R.id.nav_add_pro, AddDrugFragment::class.java, null)
+                // Add to back stack so the user can press 'back' to return to the product list
+                addToBackStack("add_drug")
+            }
+        }
+        // --- End of fix ---
 
         setupRecyclerView()
         loadProducts() // Call the method to load product data
@@ -42,6 +49,8 @@ class ProductsFragment : Fragment() {
         // You can set the LayoutManager in XML (app:layoutManager) or programmatically here.
         // If not set in XML for productsRecyclerView:
         if (productsRecyclerView.layoutManager == null) {
+            // The layout you provided uses a GridLayoutManager in the XML,
+            // so this check might not be necessary, but it's good practice.
             productsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         }
 
@@ -51,11 +60,7 @@ class ProductsFragment : Fragment() {
     }
 
     private fun loadProducts() {
-        // --- THIS IS WHERE YOU GET YOUR PRODUCT DATA ---
-        // This is sample data. Replace this with your actual data source
-        // (e.g., fetching from a database, network API, ViewModel, etc.)
-
-        // Make sure your Product model and R.drawable.ordersimg exist
+        // This is your existing sample data logic.
         val sampleProducts = listOf(
             Product(
                 id = "1",
@@ -78,18 +83,12 @@ class ProductsFragment : Fragment() {
                 stockStatus = "IN STOCK",
                 price = "Rs. 99.00"
             )
-            // Add more products as needed
         )
 
-        productList.clear() // Clear existing data if any
-        productList.addAll(sampleProducts) // Add new sample data
+        productList.clear()
+        productList.addAll(sampleProducts)
 
         // Notify the adapter that the data has changed
-        // If your adapter has an updateData method like the one we discussed:
         productsAdapter.updateData(productList)
-        // Or, if you directly modified the list passed to the adapter during construction
-        // and your adapter doesn't have an updateData function, you might do:
-        // productsAdapter.notifyDataSetChanged()
     }
 }
-

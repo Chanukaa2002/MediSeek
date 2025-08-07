@@ -84,12 +84,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
 
-
-
-    // CameraX for modern, easy camera management
-
-    val camerax_version = "1.4.0" // Updated to a more recent stable version
-    // CameraX for modern, easy camera management
+    // Camera Access for QR
+    val camerax_version = "1.4.0"
     implementation("androidx.camera:camera-core:$camerax_version")
     implementation("androidx.camera:camera-camera2:$camerax_version")
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
@@ -100,7 +96,13 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
     // Coroutines for background tasks (used for the scanner)
-    val coroutines_version = "1.8.0" // Updated version
+    val coroutines_version = "1.8.0"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
+
+    // Google Maps SDK for Android
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // Location services (optional but recommended for getting the user's current location)
+    implementation("com.google.android.gms:play-services-location:21.2.0")
 }

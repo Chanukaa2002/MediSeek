@@ -1,17 +1,17 @@
 package com.example.mediseek.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mediseek.AddMedicineActivity // Import the activity
 import com.example.mediseek.R
-import com.example.mediseek.adapter.ProductsAdapter // Import your adapter
-import com.example.mediseek.model.Product         // Import your Product model
+import com.example.mediseek.adapter.ProductsAdapter
+import com.example.mediseek.model.Product
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
-// This is the corrected fragment that handles both the product list and navigation.
 class ProductsFragment : Fragment(R.layout.fragment_products) {
 
     private lateinit var productsRecyclerView: RecyclerView
@@ -24,35 +24,26 @@ class ProductsFragment : Fragment(R.layout.fragment_products) {
         // Initialize RecyclerView from the inflated view
         productsRecyclerView = view.findViewById(R.id.product_recycler_view)
 
-        // --- FIX: Added navigation logic ---
+        // --- MODIFIED NAVIGATION LOGIC ---
         // Find the FloatingActionButton
         val addDrugButton = view.findViewById<FloatingActionButton>(R.id.add_drug_button)
 
-        // Set the click listener to navigate to the AddDrugFragment
+        // Set the click listener to start AddMedicineActivity
         addDrugButton.setOnClickListener {
-            parentFragmentManager.commit {
-                setReorderingAllowed(true)
-                // Replace the current fragment with AddDrugFragment
-                // R.id.fragment_container should be the ID of the FragmentContainerView in your host activity
-                replace(R.id.nav_add_pro, AddDrugFragment::class.java, null)
-                // Add to back stack so the user can press 'back' to return to the product list
-                addToBackStack("add_drug")
-            }
+            // Create an Intent to launch AddMedicineActivity
+            val intent = Intent(requireActivity(), AddMedicineActivity::class.java)
+            startActivity(intent)
         }
-        // --- End of fix ---
+        // --- End of modification ---
 
         setupRecyclerView()
         loadProducts() // Call the method to load product data
     }
 
     private fun setupRecyclerView() {
-        // You can set the LayoutManager in XML (app:layoutManager) or programmatically here.
-        // If not set in XML for productsRecyclerView:
-        if (productsRecyclerView.layoutManager == null) {
-            // The layout you provided uses a GridLayoutManager in the XML,
-            // so this check might not be necessary, but it's good practice.
-            productsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        }
+        // The layout you provided uses a GridLayoutManager in the XML,
+        // so we'll ensure it's set up correctly here as well.
+        productsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3) // 3 columns as per your XML
 
         // Initialize the adapter with the (initially empty) product list
         productsAdapter = ProductsAdapter(productList)
@@ -64,14 +55,14 @@ class ProductsFragment : Fragment(R.layout.fragment_products) {
         val sampleProducts = listOf(
             Product(
                 id = "1",
-                imageName = R.drawable.ordersimg, // Example image, ensure it exists in res/drawable
+                imageName = R.drawable.ordersimg,
                 name = "Product Alpha",
                 stockStatus = "IN STOCK",
                 price = "Rs. 130.00"
             ),
             Product(
                 id = "2",
-                imageName = R.drawable.ordersimg, // Replace with actual different images if available
+                imageName = R.drawable.ordersimg,
                 name = "Product Beta",
                 stockStatus = "OUT OF STOCK",
                 price = "Rs. 250.50"

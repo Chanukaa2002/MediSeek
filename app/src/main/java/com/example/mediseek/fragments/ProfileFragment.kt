@@ -17,7 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.mediseek.LoginActivity
+import com.example.mediseek.Auth.LoginActivity
 import com.example.mediseek.databinding.FragmentProfileBinding
 import com.example.mediseek.service.ImageService
 import com.google.firebase.auth.FirebaseAuth

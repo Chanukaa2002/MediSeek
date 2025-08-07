@@ -1,98 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:background="@color/lightGray"
-    android:gravity="center"
-    tools:context=".MainActivity">
+    tools:context="com.example.mediseek.ClientActivity">
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_pharmacy"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="15dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/mainColor">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_pharmacy"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center_horizontal|bottom"
-            android:padding="24dp"
-            android:id="@+id/search_pharmacy_btn">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="15dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/mainColor">
 
-            <ImageView
-                android:layout_width="200dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:src="@drawable/a001"
-                android:scaleType="fitCenter"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_horizontal|bottom"
+                android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="search_by"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                <ImageView
+                    android:layout_width="200dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/a001"
+                    android:scaleType="fitCenter"
+                    />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="pharmacy"
-                android:textColor="@color/white"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_by"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_medicine"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="8dp"
-        app:cardCornerRadius="15dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/green">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pharmacy"
+                    android:textColor="@color/white"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        <LinearLayout
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_medicine"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center_horizontal|bottom"
-            android:padding="24dp">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="15dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/green">
 
-            <ImageView
-                android:layout_width="200dp"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:src="@drawable/c003"
-                android:scaleType="fitCenter"/>
-<!--                android:contentDescription="@string/search_medicine_icon"/>-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_horizontal|bottom"
+                android:padding="24dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="search_by"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                <ImageView
+                    android:layout_width="200dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/c003"
+                    android:scaleType="fitCenter"
+                    />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="medicine"
-                android:textColor="@color/white"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_by"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
 
-</LinearLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/medicine"
+                    android:textColor="@color/white"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+</RelativeLayout>

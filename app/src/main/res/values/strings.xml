@@ -17,4 +17,11 @@
     <string name="enter_full_name">Enter your full name</string>
     <string name="confirm_password">Confirm your password</string>
     <string name="sign_up_with_google">SIGN UP WITH GOOGLE</string>
+    <string name="default_web_client_id">test</string>
+    <string name="search_by">search_by</string>
+    <string name="todo">TODO</string>
+    <string name="medicine">medicine</string>
+    <string name="pharmacy">pharmacy</string>
+    <string name="mediseek">MediSeek</string>
+
 </resources>

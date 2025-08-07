@@ -39,7 +39,7 @@
         </activity>
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".Auth.LoginActivity"
             android:exported="false" />
 
         <activity
@@ -57,6 +57,19 @@
             android:name=".AdminActivity"
             android:exported="false"
             android:theme="@style/Theme.MediSeek" />
+<!--        <activity-->
+<!--            android:name=".AddLocationActivity"-->
+<!--            android:exported="false"-->
+<!--            android:theme="@style/Theme.MediSeek" />-->
+
+<!--        <activity-->
+<!--            android:name=".MapActivity"-->
+<!--            android:exported="false"-->
+<!--            android:theme="@style/Theme.MediSeek" />-->
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC79EHxqbK2PgPHGXQ8XdhLBE1llGYLJCI"  />
 
     </application>
 

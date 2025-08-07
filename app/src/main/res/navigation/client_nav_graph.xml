@@ -3,49 +3,108 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/client_nav_graph"
-    app:startDestination="@id/nav_home">
+    app:startDestination="@id/homeFragment">
 
+    <!-- Home Fragment (New Start Destination) -->
     <fragment
-        android:id="@+id/nav_home"
+        android:id="@+id/homeFragment"
         android:name="com.example.mediseek.fragments.HomeFragment"
         android:label="Home"
-        tools:layout="@layout/fragment_home"
-        />
+        tools:layout="@layout/fragment_home">
+        <!-- Add actions to other destinations from home if needed -->
+        <action
+            android:id="@+id/action_home_to_search"
+            app:destination="@id/clientSearchFragment" />
+    </fragment>
 
+    <!-- Search Fragment -->
     <fragment
-        android:id="@+id/nav_search"
-        android:name="com.example.mediseek.client_search.Clientsearch"
-        android.label="Order"
-        tools:layout="@layout/fragment_client_search"
-        />
+        android:id="@+id/clientSearchFragment"
+        android:name="com.example.mediseek.client_search.ClientSearch"
+        android:label="Search"
+        tools:layout="@layout/fragment_client_search">
+        <action
+            android:id="@+id/action_search_to_pharmacy"
+            app:destination="@id/pharmacySearchFragment" />
+        <action
+            android:id="@+id/action_search_to_medicine"
+            app:destination="@id/medicineSearchFragment" />
+    </fragment>
 
+    <!-- Pharmacy Search Fragment -->
     <fragment
-        android:id="@+id/nav_livechat"
-        android:name="com.example.mediseek.fragments.LiveChatFragment"
-        android.label="Live Chat"
-        tools:layout="@layout/fragment_livechat"
-        />
+        android:id="@+id/pharmacySearchFragment"
+        android:name="com.example.mediseek.client_search.PharmacySearchFragment"
+        android:label="Pharmacies"
+        tools:layout="@layout/fragment_pharmacy_search">
+        <argument
+            android:name="medicineName"
+            app:argType="string"
+            android:defaultValue="" />
+        <argument
+            android:name="pharmacyId"
+            app:argType="string"
+            android:defaultValue="" />
+        <action
+            android:id="@+id/action_pharmacy_to_order"
+            app:destination="@id/orderFragment">
+            <argument
+                android:name="pharmacyId"
+                app:argType="string" />
+            <argument
+                android:name="pharmacyName"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <!-- Medicine Search Fragment -->
+    <fragment
+        android:id="@+id/medicineSearchFragment"
+        android:name="com.example.mediseek.client_search.MedicineSearchFragment"
+        android:label="Medicines"
+        tools:layout="@layout/fragment_medicine_search">
+        <action
+            android:id="@+id/action_medicine_to_pharmacy"
+            app:destination="@id/pharmacySearchFragment">
+            <argument
+                android:name="medicineName"
+                app:argType="string" />
+            <argument
+                android:name="pharmacyId"
+                app:argType="string" />
+        </action>
+    </fragment>
+
+    <!-- Order Fragment -->
     <fragment
         android:id="@+id/orderFragment"
         android:name="com.example.mediseek.fragments.OrderFragment"
-        tools:layout="@layout/fragment_order"/>
-    <fragment
-        android:id="@+id/nav_profile"
-        android:name="com.example.mediseek.fragments.ProfileFragment"
-        android:label="Profile"
-        tools:layout="@layout/fragment_profile"/>
-    
-    <fragment
-        android:id="@+id/nav_search_medicine"
-        android:name="MedicineSearchFragment"
-        tools:layout="@layout/fragment_medicine_search"/>
-
-    <fragment
-        android:id="@+id/nav_search_pharmacy"
-        android:name="PharmacySearchFragment"
-        tools:layout="@layout/fragment_pharmacy_search">
-        <action
-            android:id="@+id/action_pharmacySearchFragment_to_orderFragment"
-            app:destination="@id/orderFragment" />
+        android:label="Place Order"
+        tools:layout="@layout/fragment_order">
+        <argument
+            android:name="pharmacyId"
+            app:argType="string" />
+        <argument
+            android:name="pharmacyName"
+            app:argType="string" />
     </fragment>
+
+    <!-- Profile Fragment -->
+    <fragment
+        android:id="@+id/clientProfileFragment"
+        android:name="com.example.mediseek.fragments.ProfileFragment"
+        android:label="My Profile"
+        tools:layout="@layout/fragment_profile" />
+
+    <!-- Live Chat Fragment -->
+    <fragment
+        android:id="@+id/liveChatFragment"
+        android:name="com.example.mediseek.fragments.LiveChatFragment"
+        android:label="Live Chat"
+        tools:layout="@layout/fragment_livechat" />
+
+    <!-- Global Actions -->
+    <action
+        android:id="@+id/action_global_liveChatFragment"
+        app:destination="@id/liveChatFragment" />
 </navigation>

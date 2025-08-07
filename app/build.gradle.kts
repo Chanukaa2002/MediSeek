@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
     id("kotlin-parcelize")
+//    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -83,7 +84,29 @@ dependencies {
     implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("com.google.firebase:firebase-firestore-ktx:24.10.0")
+    implementation ("androidx.appcompat:appcompat:1.6.1")
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
+    implementation ("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation ("androidx.navigation:navigation-ui-ktx:2.5.3")
+
+    // Firebase Firestore
+    implementation ("com.google.firebase:firebase-firestore-ktx:24.4.1")
 
 
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.10.0") // Ensure this version
+
+    // Navigation
+    implementation("androidx.navigation:navigation-fragment-ktx:2.5.3")
+    implementation("androidx.navigation:navigation-ui-ktx:2.5.3")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+
+    // Logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
 
 }

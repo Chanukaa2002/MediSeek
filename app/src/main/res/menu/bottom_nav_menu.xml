@@ -1,24 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:title="Home"
+        android:icon="@drawable/home" />
 
     <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/home"
-        android:title= "Home"/>
+        android:id="@+id/clientSearchFragment"
+        android:title="Search"
+        android:icon="@drawable/search" />
 
     <item
-        android:id="@+id/nav_search"
-        android:icon="@drawable/search"
-        android:title= "Search"/>
-
-<!--    <item-->
-<!--        android:id="@+id/nav_fav"-->
-<!--        android:icon="@drawable/heart"-->
-<!--        android:title= "Favorites"/>-->
+        android:id="@+id/liveChatFragment"
+        android:title="Live Chat"
+        android:icon="@drawable/chat" />
 
     <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/user"
-        android:title= "Profile"/>
-
+        android:id="@+id/clientProfileFragment"
+        android:title="Profile"
+        android:icon="@drawable/user" />
 </menu>

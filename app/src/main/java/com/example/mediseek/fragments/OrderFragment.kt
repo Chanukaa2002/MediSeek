@@ -66,7 +66,7 @@ class OrderFragment : Fragment() {
         view.findViewById<TextView>(R.id.pharmacy_title).text = name
 
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat).setOnClickListener {
-            findNavController().navigate(R.id.nav_livechat)
+            findNavController().navigate(R.id.nav_chat)
         }
 
         placeOrderButton.setOnClickListener {

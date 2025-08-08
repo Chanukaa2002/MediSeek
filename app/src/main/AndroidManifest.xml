@@ -86,5 +86,8 @@
             android:value="AIzaSyC79EHxqbK2PgPHGXQ8XdhLBE1llGYLJCI"  />
 
     </application>
+    <queries>
+        <package android:name="com.google.android.apps.maps" />
+    </queries>
 
 </manifest>

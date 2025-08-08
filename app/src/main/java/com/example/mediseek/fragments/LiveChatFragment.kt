@@ -70,7 +70,7 @@ class LiveChatFragment : Fragment() {
         }
 
         // This should be dynamic, but using the hardcoded value for now.
-        val pharmacyId = "6UZnsULIzLe8KgxyUWAMC5MdlWp1"
+        val pharmacyId = arguments?.getString("pharmacyId") ?: ""
         val patientId = auth.currentUser?.uid
 
         chatId = if (patientId != null && pharmacyId.isNotEmpty()) {

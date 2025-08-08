@@ -129,4 +129,5 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("com.jakewharton.timber:timber:5.0.1")
 }

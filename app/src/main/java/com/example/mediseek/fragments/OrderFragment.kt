@@ -3,6 +3,7 @@ package com.example.mediseek.fragments
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -88,11 +89,17 @@ class OrderFragment : Fragment() {
         quantityInput = view.findViewById(R.id.quantity_input)
         totalPriceText = view.findViewById(R.id.total_price_text)
 
-        // FIXED: Added click listener for the chat button
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat).setOnClickListener {
-            // Ensure this destination ID is correct in your nav_graph.xml
-            findNavController().navigate(R.id.liveChatFragment)
+            val bundle = Bundle().apply {
+                putString("pharmacyId", pharmacyId)
+            }
+            findNavController().navigate(R.id.liveChatFragment, bundle)
         }
+        view.findViewById<FloatingActionButton>(R.id.pharmacyDirections).setOnClickListener {
+            val pharmacyId = arguments?.getString("pharmacyId") ?: return@setOnClickListener
+            openPharmacyDirections(pharmacyId)
+        }
+
 
         loadMedicinesForPharmacy(pharmacyId)
         setupListeners()
@@ -378,5 +385,40 @@ class OrderFragment : Fragment() {
         view?.findViewById<TextInputEditText>(R.id.collect_date)?.text?.clear()
         view?.findViewById<TextInputEditText>(R.id.prescription)?.text?.clear()
         view?.findViewById<TextInputEditText>(R.id.note)?.text?.clear()
+    }
+    private fun openPharmacyDirections(pharmacyId: String) {
+        val pharmacyRef = FirebaseFirestore.getInstance().collection("pharmacy").document(pharmacyId)
+
+        pharmacyRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val locationList = document.get("location") as? List<*>
+                    if (locationList != null && locationList.size >= 2) {
+                        val latitude = locationList[0].toString()
+                        val longitude = locationList[1].toString()
+
+                        val gmmIntentUri = Uri.parse("google.navigation:q=$latitude,$longitude")
+                        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                        mapIntent.setPackage("com.google.android.apps.maps")
+
+                        if (mapIntent.resolveActivity(requireActivity().packageManager) != null) {
+                            startActivity(mapIntent)
+                        } else {
+                            Toast.makeText(context, "Google Maps is not installed.", Toast.LENGTH_LONG).show()
+                            val browserIntentUri = Uri.parse(
+                                "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude"
+                            )
+                            startActivity(Intent(Intent.ACTION_VIEW, browserIntentUri))
+                        }
+                    } else {
+                        Toast.makeText(context, "Location not found for this pharmacy", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Pharmacy not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(context, "Failed to fetch pharmacy location", Toast.LENGTH_SHORT).show()
+            }
     }
 }

@@ -109,6 +109,15 @@
                                 android:layout_height="wrap_content"
                                 android:inputType="number"
                                 android:text="1"/>
+                            <!-- Add this TextView inside the horizontal LinearLayout with quantity and price -->
+                            <TextView
+                                android:id="@+id/available_qty_text"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Available: 0"
+                                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="8dp"/>
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 

@@ -56,6 +56,7 @@ class OrderFragment : Fragment() {
     private lateinit var pharmacyId: String
     private lateinit var pharmacyName: String
     private var totalAmount = 0.0
+    private lateinit var availableQtyText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +89,7 @@ class OrderFragment : Fragment() {
         priceInput = view.findViewById(R.id.price_input)
         quantityInput = view.findViewById(R.id.quantity_input)
         totalPriceText = view.findViewById(R.id.total_price_text)
+        availableQtyText = view.findViewById(R.id.available_qty_text)
 
         view.findViewById<FloatingActionButton>(R.id.pharmacy_chat).setOnClickListener {
             val bundle = Bundle().apply {
@@ -177,9 +179,17 @@ class OrderFragment : Fragment() {
     }
 
     private fun updateMedicineDetails() {
+        if (selectedMedicine == null) {
+            availableQtyText.text = ""
+            priceInput.setText("0.00")
+            quantityInput.setText("1")
+            updateTotalPrice()
+            return
+        }
         selectedMedicine?.let { medicine ->
             priceInput.setText(DecimalFormat("#,##0.00").format(medicine.price))
             quantityInput.setText("1")
+            availableQtyText.text = "Available: ${medicine.qty}"
             updateTotalPrice()
         }
     }
@@ -223,7 +233,7 @@ class OrderFragment : Fragment() {
         }
 
         if (patientName.isNullOrBlank() || patientAge.isNullOrBlank() || collectTime.isNullOrBlank() ||
-            collectDate.isNullOrBlank() || prescription.isNullOrBlank()
+            collectDate.isNullOrBlank()
         ) {
             Toast.makeText(context, "Please fill all required fields", Toast.LENGTH_SHORT).show()
             return
@@ -256,7 +266,6 @@ class OrderFragment : Fragment() {
             else -> onPaymentFailure("Unknown payment result")
         }
     }
-
     private fun onPaymentSuccess() {
         requireActivity().runOnUiThread {
             Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
@@ -301,6 +310,20 @@ class OrderFragment : Fragment() {
                 .addOnFailureListener { e ->
                     Timber.w(e, "Error writing order document")
                 }
+            val medicineId = selectedMedicine?.id
+            val newQuantity = (selectedMedicine?.qty?:0) - (quantityInput.text.toString().toIntOrNull() ?: 0)
+            if(medicineId != null){
+                db.collection("medicines")
+                    .document(medicineId)
+                    .update("qty",newQuantity)
+                    .addOnSuccessListener {
+                        Timber.d("Medicine quantity updated successfully")
+                    }
+                    .addOnFailureListener { e ->
+                        Timber.w(e, "Error updating medicine quantity")
+                    }
+            }
+            loadMedicinesForPharmacy(pharmacyId)
 
             clearForm()
             placeOrderButton.postDelayed({
@@ -309,7 +332,6 @@ class OrderFragment : Fragment() {
             }, 3000)
         }
     }
-
     private fun onPaymentFailure(errorMessage: String) {
         requireActivity().runOnUiThread {
             placeOrderButton.isEnabled = true
@@ -317,7 +339,6 @@ class OrderFragment : Fragment() {
             Toast.makeText(context, "Payment failed: $errorMessage", Toast.LENGTH_LONG).show()
         }
     }
-
     private fun onPaymentCancel() {
         requireActivity().runOnUiThread {
             placeOrderButton.isEnabled = true
@@ -325,7 +346,6 @@ class OrderFragment : Fragment() {
             Toast.makeText(context, "Payment canceled", Toast.LENGTH_SHORT).show()
         }
     }
-
     private fun sendOrderQrToEmail(orderId: String) {
         try {
             val currentUser = firebaseAuth.currentUser
@@ -345,7 +365,7 @@ class OrderFragment : Fragment() {
                 Pharmacy: $pharmacyName
                 Medicine: ${selectedMedicine?.name}
                 Quantity: ${quantityInput.text.toString()}
-                Total Amount: LKR ${DecimalFormat("#,##0.00").format(totalAmount)}
+                Total Amount: LKR ${DecimalFormat("#,##0.00").format(totalAmount)}//
                 Please present this QR code when collecting your medication.
                 Regards,
                 MediSeek Team
@@ -370,12 +390,12 @@ class OrderFragment : Fragment() {
             Timber.e(e, "Error sending QR code email")
         }
     }
-
     private fun clearForm() {
         medicineDropdown.text?.clear()
         priceInput.setText("0.00")
         quantityInput.setText("1")
         totalPriceText.text = "Total: LKR 0.00"
+        availableQtyText.text = ""
         selectedMedicine = null
         totalAmount = 0.0
 

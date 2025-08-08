@@ -1,94 +1,129 @@
 package com.example.mediseek.fragments
 
+import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
+import android.widget.EditText
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.commit
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mediseek.AddMedicineActivity
 import com.example.mediseek.R
-import com.example.mediseek.adapter.ProductsAdapter // Import your adapter
-import com.example.mediseek.model.Product         // Import your Product model
+import com.example.mediseek.adapter.ProductsAdapter
+import com.example.mediseek.model.Product
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-// This is the corrected fragment that handles both the product list and navigation.
-class ProductsFragment : Fragment(R.layout.fragment_products) {
+class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.OnItemClickListener {
 
     private lateinit var productsRecyclerView: RecyclerView
     private lateinit var productsAdapter: ProductsAdapter
-    private var productList: MutableList<Product> = mutableListOf()
+    private lateinit var db: FirebaseFirestore
+    private lateinit var searchEditText: EditText
+    private var fullProductList: MutableList<Product> = mutableListOf()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Initialize RecyclerView from the inflated view
+        db = FirebaseFirestore.getInstance()
         productsRecyclerView = view.findViewById(R.id.product_recycler_view)
-
-        // --- FIX: Added navigation logic ---
-        // Find the FloatingActionButton
+        searchEditText = view.findViewById(R.id.et_search_medicine)
         val addDrugButton = view.findViewById<FloatingActionButton>(R.id.add_drug_button)
 
-        // Set the click listener to navigate to the AddDrugFragment
         addDrugButton.setOnClickListener {
-            parentFragmentManager.commit {
-                setReorderingAllowed(true)
-                // Replace the current fragment with AddDrugFragment
-                // R.id.fragment_container should be the ID of the FragmentContainerView in your host activity
-                replace(R.id.nav_add_pro, AddDrugFragment::class.java, null)
-                // Add to back stack so the user can press 'back' to return to the product list
-                addToBackStack("add_drug")
-            }
+            val intent = Intent(requireActivity(), AddMedicineActivity::class.java)
+            startActivity(intent)
         }
-        // --- End of fix ---
+
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                filter(s.toString())
+            }
+        })
 
         setupRecyclerView()
-        loadProducts() // Call the method to load product data
+        loadProductsFromFirestore()
     }
 
     private fun setupRecyclerView() {
-        // You can set the LayoutManager in XML (app:layoutManager) or programmatically here.
-        // If not set in XML for productsRecyclerView:
-        if (productsRecyclerView.layoutManager == null) {
-            // The layout you provided uses a GridLayoutManager in the XML,
-            // so this check might not be necessary, but it's good practice.
-            productsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        }
-
-        // Initialize the adapter with the (initially empty) product list
-        productsAdapter = ProductsAdapter(productList)
+        productsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
+        productsAdapter = ProductsAdapter(mutableListOf(), this)
         productsRecyclerView.adapter = productsAdapter
     }
 
-    private fun loadProducts() {
-        // This is your existing sample data logic.
-        val sampleProducts = listOf(
-            Product(
-                id = "1",
-                imageName = R.drawable.ordersimg, // Example image, ensure it exists in res/drawable
-                name = "Product Alpha",
-                stockStatus = "IN STOCK",
-                price = "Rs. 130.00"
-            ),
-            Product(
-                id = "2",
-                imageName = R.drawable.ordersimg, // Replace with actual different images if available
-                name = "Product Beta",
-                stockStatus = "OUT OF STOCK",
-                price = "Rs. 250.50"
-            ),
-            Product(
-                id = "3",
-                imageName = R.drawable.ordersimg,
-                name = "Product Gamma",
-                stockStatus = "IN STOCK",
-                price = "Rs. 99.00"
-            )
-        )
+    override fun onItemClick(productId: String) {
+        val dialog = EditProductDialogFragment.newInstance(productId)
+        dialog.show(parentFragmentManager, EditProductDialogFragment.TAG)
+    }
 
-        productList.clear()
-        productList.addAll(sampleProducts)
+    private fun filter(query: String) {
+        val filteredList = mutableListOf<Product>()
+        for (product in fullProductList) {
+            if (product.name.lowercase().contains(query.lowercase())) {
+                filteredList.add(product)
+            }
+        }
+        productsAdapter.updateData(filteredList)
+    }
 
-        // Notify the adapter that the data has changed
-        productsAdapter.updateData(productList)
+    /**
+     * Determines the product status based on its expiration date and quantity.
+     * This function now lives inside the fragment.
+     */
+    private fun determineStatus(expiryDateString: String, quantity: Long): String {
+        try {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val expiryDate = dateFormat.parse(expiryDateString)
+            val currentDate = Date()
+            if (expiryDate != null && expiryDate.before(currentDate)) {
+                return "Expired"
+            }
+        } catch (e: Exception) {
+            // Log error or handle invalid date format
+        }
+
+        return if (quantity < 10) "Out of Stock" else "In Stock"
+    }
+
+    private fun loadProductsFromFirestore() {
+        db.collection("medicines")
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.w("ProductsFragment", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                val newProductList = mutableListOf<Product>()
+                if (snapshots != null) {
+                    for (doc in snapshots) {
+                        // Get the required fields from the document
+                        val expiryDate = doc.getString("EXD") ?: ""
+                        val quantity = doc.getLong("qty") ?: 0L
+
+                        // Calculate the status dynamically
+                        val status = determineStatus(expiryDate, quantity)
+
+                        // Create the Product object with the calculated status
+                        val product = Product(
+                            id = doc.id,
+                            name = doc.getString("name") ?: "No Name",
+                            imgURL = doc.getString("imgURL") ?: "", // Correctly maps imgURL to imageName
+                            stockStatus = status, // Use the dynamically calculated status
+                            price = "Rs. ${String.format("%.2f", doc.getDouble("price") ?: 0.0)}"
+                        )
+                        newProductList.add(product)
+                    }
+                }
+                fullProductList.clear()
+                fullProductList.addAll(newProductList)
+                filter(searchEditText.text.toString())
+            }
     }
 }

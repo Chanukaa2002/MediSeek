@@ -1,7 +1,6 @@
 package com.example.mediseek.client_search
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,8 +22,8 @@ class PharmacySearchFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: PharmacyAdapter
     private val db = FirebaseFirestore.getInstance()
-    private val TAG = "PharmacySearch"
     private var allPharmacies: List<Pharmacy> = emptyList()
+    private var hasShownNoResults = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,7 +36,6 @@ class PharmacySearchFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         setupSearchView()
         loadInitialData()
@@ -45,10 +43,10 @@ class PharmacySearchFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = PharmacyAdapter(emptyList()) { pharmacy ->
-            Timber.tag(TAG).d("Selected pharmacy: ${pharmacy.name}")
             val bundle = Bundle().apply {
                 putString("pharmacyId", pharmacy.pharmacyId)
-                putString("pharmacyName", pharmacy.name)
+                putString("pharmacyName", pharmacy.username)
+                putString("medicineName", arguments?.getString("medicineName"))
             }
             findNavController().navigate(R.id.action_pharmacy_to_order, bundle)
         }
@@ -59,19 +57,13 @@ class PharmacySearchFragment : Fragment() {
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
-                    Timber.tag(TAG).d("Pharmacy search submitted: $it")
-                    filterPharmacies(it)
-                    binding.searchView.clearFocus()
-                }
+                filterPharmacies(query ?: "")
+                binding.searchView.clearFocus()
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                newText?.let {
-                    Timber.tag(TAG).d("Pharmacy search text changed: $it")
-                    filterPharmacies(it)
-                }
+                filterPharmacies(newText ?: "")
                 return true
             }
         })
@@ -79,144 +71,143 @@ class PharmacySearchFragment : Fragment() {
 
     private fun loadInitialData() {
         binding.progressBar.visibility = View.VISIBLE
-        Log.d(TAG, "Loading initial data")
-
         val medicineName = arguments?.getString("medicineName") ?: ""
-        // The pharmacyId is no longer sent from the medicine list,
-        // but this logic is kept in case another part of the app sends it.
-        val pharmacyId = arguments?.getString("pharmacyId") ?: ""
+        val pharmacyIdFromArgs = arguments?.getString("pharmacyId") ?: ""
 
         binding.title.text = when {
             medicineName.isNotEmpty() -> "Pharmacies with: $medicineName"
-            pharmacyId.isNotEmpty() -> "Pharmacy Details"
+            pharmacyIdFromArgs.isNotEmpty() -> "Pharmacy Details"
             else -> "All Pharmacies"
         }
 
         when {
-            // This is kept for flexibility but won't be triggered from the medicine list anymore
-            pharmacyId.isNotEmpty() -> loadSinglePharmacy(pharmacyId)
-            // This will now be called when navigating from the medicine list
+            pharmacyIdFromArgs.isNotEmpty() -> loadSinglePharmacy(pharmacyIdFromArgs)
             medicineName.isNotEmpty() -> loadPharmaciesWithMedicine(medicineName)
-            // This is called when searching pharmacies directly
             else -> loadAllPharmacies()
         }
     }
 
     private fun loadSinglePharmacy(pharmacyId: String) {
-        Log.d(TAG, "Loading single pharmacy: $pharmacyId")
-        db.collection("Pharmacy")
-            .whereEqualTo("ph_id", pharmacyId)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { documents ->
+        Timber.d("Loading single pharmacy: $pharmacyId")
+        db.collection("pharmacy").document(pharmacyId).get()
+            .addOnSuccessListener { document ->
+                if (!isAdded) return@addOnSuccessListener
                 binding.progressBar.visibility = View.GONE
-                if (documents.isEmpty) {
-                    Log.d(TAG, "No pharmacy found with ID: $pharmacyId")
-                    Toast.makeText(context, "Pharmacy not found", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
+                if (document.exists()) {
+                    val pharmacy = document.toObject(Pharmacy::class.java)
+                    if (pharmacy != null) {
+                        allPharmacies = listOf(pharmacy)
+                        adapter.updateData(allPharmacies)
+                    }
+                } else {
+                    Toast.makeText(context, "Pharmacy not found.", Toast.LENGTH_SHORT).show()
                 }
-
-                allPharmacies = documents.toObjects(Pharmacy::class.java)
-                Log.d(TAG, "Loaded single pharmacy: ${allPharmacies[0].name}")
-                adapter.updateData(allPharmacies)
             }
             .addOnFailureListener { e ->
+                if (!isAdded) return@addOnFailureListener
                 binding.progressBar.visibility = View.GONE
-                Log.e(TAG, "Error loading pharmacy", e)
-                Toast.makeText(context, "Failed to load pharmacy: ${e.message}", Toast.LENGTH_SHORT).show()
+                Timber.e(e, "Error loading pharmacy")
+                Toast.makeText(context, "Failed to load pharmacy details.", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun loadPharmaciesWithMedicine(medicineName: String) {
-        Log.d(TAG, "Loading pharmacies for medicine: $medicineName")
-        db.collection("Medicine")
+        binding.progressBar.visibility = View.VISIBLE
+        Timber.d("Loading pharmacies for medicine: $medicineName")
+        db.collection("medicines")
             .whereEqualTo("name", medicineName)
             .get()
             .addOnSuccessListener { medicineDocs ->
+                if (!isAdded) return@addOnSuccessListener
                 if (medicineDocs.isEmpty) {
                     binding.progressBar.visibility = View.GONE
-                    Log.d(TAG, "No medicines found with name: $medicineName")
-                    Toast.makeText(context, "No pharmacies carry this medicine", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No pharmacies carry this medicine.", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
                 }
 
-                val pharmacyIds = medicineDocs.mapNotNull { it.getString("ph_id") }.filter { it.isNotEmpty() }.distinct()
-
-                Log.d(TAG, "Found ${pharmacyIds.size} pharmacy IDs: $pharmacyIds")
+                val pharmacyIds = medicineDocs.mapNotNull { it.getString("pharmacyId") }.distinct()
 
                 if (pharmacyIds.isEmpty()) {
                     binding.progressBar.visibility = View.GONE
-                    Toast.makeText(context, "No pharmacies found", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No associated pharmacies found.", Toast.LENGTH_SHORT).show()
                     return@addOnSuccessListener
                 }
 
-                db.collection("Pharmacy")
-                    .whereIn("ph_id", pharmacyIds)
-                    .get()
-                    .addOnSuccessListener { pharmacyDocs ->
-                        binding.progressBar.visibility = View.GONE
-                        if (pharmacyDocs.isEmpty) {
-                            Log.d(TAG, "No pharmacies found for IDs: $pharmacyIds")
-                            Toast.makeText(context, "No pharmacy details available", Toast.LENGTH_SHORT).show()
-                            return@addOnSuccessListener
-                        }
+                val pharmacyChunks = pharmacyIds.chunked(30)
+                val pharmaciesFound = mutableListOf<Pharmacy>()
+                var chunksProcessed = 0
 
-                        allPharmacies = pharmacyDocs.toObjects(Pharmacy::class.java)
-                        Log.d(TAG, "Loaded ${allPharmacies.size} pharmacies")
-                        adapter.updateData(allPharmacies)
-                    }
-                    .addOnFailureListener { e ->
-                        binding.progressBar.visibility = View.GONE
-                        Log.e(TAG, "Error loading pharmacies", e)
-                        Toast.makeText(context, "Failed to load pharmacies: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                for (chunk in pharmacyChunks) {
+                    db.collection("pharmacy").whereIn("userId", chunk).get()
+                        .addOnSuccessListener { pharmacyDocs ->
+                            if (!isAdded) return@addOnSuccessListener
+                            pharmaciesFound.addAll(pharmacyDocs.toObjects(Pharmacy::class.java))
+                            chunksProcessed++
+                            if (chunksProcessed == pharmacyChunks.size) {
+                                binding.progressBar.visibility = View.GONE
+                                allPharmacies = pharmaciesFound
+                                adapter.updateData(allPharmacies)
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            if (!isAdded) return@addOnFailureListener
+                            chunksProcessed++
+                            Timber.e(e, "Error loading a chunk of pharmacies by ID")
+                            if (chunksProcessed == pharmacyChunks.size) {
+                                binding.progressBar.visibility = View.GONE
+                                adapter.updateData(pharmaciesFound)
+                                Toast.makeText(context, "Could not load all pharmacy details.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                }
             }
             .addOnFailureListener { e ->
+                if (!isAdded) return@addOnFailureListener
                 binding.progressBar.visibility = View.GONE
-                Log.e(TAG, "Error finding medicine", e)
-                Toast.makeText(context, "Medicine search failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                Timber.e(e, "Error finding medicine")
+                Toast.makeText(context, "An error occurred while searching.", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun loadAllPharmacies() {
-        Log.d(TAG, "Loading all pharmacies")
-        db.collection("Pharmacy")
+        binding.progressBar.visibility = View.VISIBLE
+        Timber.d("Loading all pharmacies")
+        db.collection("pharmacy")
             .get()
             .addOnSuccessListener { documents ->
+                if (!isAdded) return@addOnSuccessListener
                 binding.progressBar.visibility = View.GONE
                 if (documents.isEmpty) {
-                    Log.d(TAG, "No pharmacies found in database")
-                    Toast.makeText(context, "No pharmacies available", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
+                    Toast.makeText(context, "No pharmacies available.", Toast.LENGTH_SHORT).show()
+                } else {
+                    allPharmacies = documents.toObjects(Pharmacy::class.java)
+                    adapter.updateData(allPharmacies)
                 }
-
-                allPharmacies = documents.toObjects(Pharmacy::class.java)
-                Log.d(TAG, "Loaded ${allPharmacies.size} pharmacies")
-                adapter.updateData(allPharmacies)
             }
             .addOnFailureListener { e ->
+                if (!isAdded) return@addOnFailureListener
                 binding.progressBar.visibility = View.GONE
-                Log.e(TAG, "Error loading pharmacies", e)
-                Toast.makeText(context, "Failed to load pharmacies: ${e.message}", Toast.LENGTH_SHORT).show()
+                Timber.e(e, "Error loading all pharmacies")
+                Toast.makeText(context, "Failed to load pharmacies.", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun filterPharmacies(query: String) {
         val filtered = if (query.isEmpty()) {
+            hasShownNoResults = false
             allPharmacies
         } else {
             allPharmacies.filter { pharmacy ->
-                pharmacy.name.contains(query, true) ||
-                        pharmacy.location.contains(query, true) ||
-                        (pharmacy.regNo?.contains(query, true) ?: false)
+                pharmacy.username.contains(query, ignoreCase = true)
             }
         }
-
-        Log.d(TAG, "Filtered ${filtered.size} pharmacies for query: $query")
         adapter.updateData(filtered)
 
-        if (filtered.isEmpty() && query.isNotEmpty()) {
-            Toast.makeText(context, "No matching pharmacies found", Toast.LENGTH_SHORT).show()
+        if (filtered.isEmpty() && query.isNotEmpty() && !hasShownNoResults) {
+            Toast.makeText(context, "No pharmacies match your search.", Toast.LENGTH_SHORT).show()
+            hasShownNoResults = true
+        } else if (filtered.isNotEmpty()) {
+            hasShownNoResults = false
         }
     }
 

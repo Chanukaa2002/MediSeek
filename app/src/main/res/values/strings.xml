@@ -23,5 +23,6 @@
     <string name="medicine">medicine</string>
     <string name="pharmacy">pharmacy</string>
     <string name="mediseek">MediSeek</string>
+    <string name="select_medicine">Select medicine</string>
 
 </resources>

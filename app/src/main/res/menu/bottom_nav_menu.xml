@@ -10,10 +10,6 @@
         android:title="Search"
         android:icon="@drawable/search" />
 
-    <item
-        android:id="@+id/liveChatFragment"
-        android:title="Live Chat"
-        android:icon="@drawable/chat" />
 
     <item
         android:id="@+id/clientProfileFragment"

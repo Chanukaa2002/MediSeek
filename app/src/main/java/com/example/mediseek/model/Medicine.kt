@@ -14,8 +14,10 @@ data class Medicine(
     var name: String = "",
     var pharmacyId: String = "",
     var price: Double = 0.0,
-    var qty: Int = 0, // This corresponds to 'stock'
+    var qty: Int = 0,
     var status: String = "",
+    var latitude: Double = 0.0,
+    var longitude: Double = 0.0,
 
     // Use @PropertyName for fields with different names, capitalization, or special characters
     @get:PropertyName("EXD") @set:PropertyName("EXD")

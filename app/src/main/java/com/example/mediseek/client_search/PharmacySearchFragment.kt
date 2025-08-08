@@ -15,6 +15,12 @@ import com.example.mediseek.databinding.FragmentPharmacySearchBinding
 import com.example.mediseek.model.Pharmacy
 import com.google.firebase.firestore.FirebaseFirestore
 import timber.log.Timber
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 class PharmacySearchFragment : Fragment() {
 
@@ -24,6 +30,9 @@ class PharmacySearchFragment : Fragment() {
     private val db = FirebaseFirestore.getInstance()
     private var allPharmacies: List<Pharmacy> = emptyList()
     private var hasShownNoResults = false
+    private var userLat = 0.0
+    private var userLng = 0.0
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,7 +47,8 @@ class PharmacySearchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupSearchView()
-        loadInitialData()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        requestLocationAndLoadData()
     }
 
     private fun setupRecyclerView() {
@@ -97,7 +107,8 @@ class PharmacySearchFragment : Fragment() {
                     val pharmacy = document.toObject(Pharmacy::class.java)
                     if (pharmacy != null) {
                         allPharmacies = listOf(pharmacy)
-                        adapter.updateData(allPharmacies)
+                        val sorted = sortPharmaciesByDistance(allPharmacies)
+                        adapter.updateData(sorted)
                     }
                 } else {
                     Toast.makeText(context, "Pharmacy not found.", Toast.LENGTH_SHORT).show()
@@ -146,7 +157,8 @@ class PharmacySearchFragment : Fragment() {
                             if (chunksProcessed == pharmacyChunks.size) {
                                 binding.progressBar.visibility = View.GONE
                                 allPharmacies = pharmaciesFound
-                                adapter.updateData(allPharmacies)
+                                val sorted = sortPharmaciesByDistance(allPharmacies)
+                                adapter.updateData(sorted)
                             }
                         }
                         .addOnFailureListener { e ->
@@ -155,7 +167,8 @@ class PharmacySearchFragment : Fragment() {
                             Timber.e(e, "Error loading a chunk of pharmacies by ID")
                             if (chunksProcessed == pharmacyChunks.size) {
                                 binding.progressBar.visibility = View.GONE
-                                adapter.updateData(pharmaciesFound)
+                                val sorted = sortPharmaciesByDistance(pharmaciesFound)
+                                adapter.updateData(sorted)
                                 Toast.makeText(context, "Could not load all pharmacy details.", Toast.LENGTH_SHORT).show()
                             }
                         }
@@ -181,7 +194,8 @@ class PharmacySearchFragment : Fragment() {
                     Toast.makeText(context, "No pharmacies available.", Toast.LENGTH_SHORT).show()
                 } else {
                     allPharmacies = documents.toObjects(Pharmacy::class.java)
-                    adapter.updateData(allPharmacies)
+                    val sorted = sortPharmaciesByDistance(allPharmacies)
+                    adapter.updateData(sorted)
                 }
             }
             .addOnFailureListener { e ->
@@ -201,7 +215,8 @@ class PharmacySearchFragment : Fragment() {
                 pharmacy.username.contains(query, ignoreCase = true)
             }
         }
-        adapter.updateData(filtered)
+        val sorted = sortPharmaciesByDistance(filtered)
+        adapter.updateData(sorted)
 
         if (filtered.isEmpty() && query.isNotEmpty() && !hasShownNoResults) {
             Toast.makeText(context, "No pharmacies match your search.", Toast.LENGTH_SHORT).show()
@@ -214,5 +229,70 @@ class PharmacySearchFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun requestLocationAndLoadData() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                200
+            )
+        } else {
+            getUserLocationAndLoad()
+        }
+    }
+
+    private fun getUserLocationAndLoad() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                userLat = location.latitude
+                userLng = location.longitude
+            }
+            loadInitialData()
+        }.addOnFailureListener {
+            loadInitialData()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 200 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getUserLocationAndLoad()
+        } else {
+            loadInitialData()
+        }
+    }
+
+    private fun distanceTo(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val R = 6371e3
+        val phi1 = Math.toRadians(lat1)
+        val phi2 = Math.toRadians(lat2)
+        val deltaPhi = Math.toRadians(lat2 - lat1)
+        val deltaLambda = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
+    }
+
+    private fun sortPharmaciesByDistance(pharmacies: List<Pharmacy>): List<Pharmacy> {
+        return pharmacies.sortedBy { pharmacy ->
+            val locationList = pharmacy.location
+            if (locationList != null && locationList.size >= 2) {
+                val lat = locationList[0].toDoubleOrNull() ?: 0.0
+                val lng = locationList[1].toDoubleOrNull() ?: 0.0
+                distanceTo(userLat, userLng, lat, lng)
+            } else {
+                Double.MAX_VALUE // if no location, put at the end
+            }
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.example.mediseek.R
 import com.example.mediseek.adapter.ProductsAdapter
 import com.example.mediseek.model.Product
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -27,6 +28,7 @@ class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.O
     private lateinit var db: FirebaseFirestore
     private lateinit var searchEditText: EditText
     private var fullProductList: MutableList<Product> = mutableListOf()
+    private lateinit var auth: FirebaseAuth
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -34,6 +36,7 @@ class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.O
         productsRecyclerView = view.findViewById(R.id.product_recycler_view)
         searchEditText = view.findViewById(R.id.et_search_medicine)
         val addDrugButton = view.findViewById<FloatingActionButton>(R.id.add_drug_button)
+        auth = FirebaseAuth.getInstance()
 
         addDrugButton.setOnClickListener {
             val intent = Intent(requireActivity(), AddMedicineActivity::class.java)
@@ -93,7 +96,14 @@ class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.O
     }
 
     private fun loadProductsFromFirestore() {
+        val currentPharmacyId = auth.currentUser?.uid
+        if (currentPharmacyId == null) {
+            Log.w("ProductsFragment", "User is not logged in.")
+            return // Don't load anything if the user isn't logged in
+        }
+
         db.collection("medicines")
+            .whereEqualTo("pharmacyId", currentPharmacyId)
             .addSnapshotListener { snapshots, e ->
                 if (e != null) {
                     Log.w("ProductsFragment", "Listen failed.", e)
@@ -103,19 +113,15 @@ class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.O
                 val newProductList = mutableListOf<Product>()
                 if (snapshots != null) {
                     for (doc in snapshots) {
-                        // Get the required fields from the document
                         val expiryDate = doc.getString("EXD") ?: ""
                         val quantity = doc.getLong("qty") ?: 0L
-
-                        // Calculate the status dynamically
                         val status = determineStatus(expiryDate, quantity)
 
-                        // Create the Product object with the calculated status
                         val product = Product(
                             id = doc.id,
                             name = doc.getString("name") ?: "No Name",
-                            imgURL = doc.getString("imgURL") ?: "", // Correctly maps imgURL to imageName
-                            stockStatus = status, // Use the dynamically calculated status
+                            imgURL = doc.getString("imgURL") ?: "",
+                            stockStatus = status,
                             price = "Rs. ${String.format("%.2f", doc.getDouble("price") ?: 0.0)}"
                         )
                         newProductList.add(product)

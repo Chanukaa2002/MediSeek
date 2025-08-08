@@ -6,10 +6,15 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Pharmacy(
-    @get:PropertyName("name") @set:PropertyName("name") var name: String = "",
-    @get:PropertyName("name_lowercase") @set:PropertyName("name_lowercase") var nameLowercase: String = "",
-    @get:PropertyName("ph_id") @set:PropertyName("ph_id") var pharmacyId: String = "",
-    @get:PropertyName("Reg_no") @set:PropertyName("Reg_no") var regNo: String = "",
-    @get:PropertyName("location") @set:PropertyName("location") var location: String = "",
-    @get:PropertyName("email") @set:PropertyName("email") var email: String = ""
+    // These property names now match your Firestore fields exactly
+    var email: String = "",
+    var registrationNumber: String = "",
+    var username: String = "", // This holds the pharmacy's name
+
+    // Use @PropertyName to map the 'userId' field in Firestore
+    @get:PropertyName("userId") @set:PropertyName("userId")
+    var pharmacyId: String = "",
+
+    // Location is now correctly modeled as a list of strings
+    var location: List<String> = emptyList()
 ) : Parcelable

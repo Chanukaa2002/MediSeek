@@ -16,7 +16,7 @@ import com.example.mediseek.adapter.MedicineAdapter
 import com.example.mediseek.databinding.FragmentMedicineSearchBinding
 import com.example.mediseek.model.Medicine
 import com.google.firebase.firestore.FirebaseFirestore
-import timber.log.Timber // <-- Import Timber
+import timber.log.Timber
 
 class MedicineSearchFragment : Fragment() {
 
@@ -24,7 +24,8 @@ class MedicineSearchFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MedicineAdapter
     private val db = FirebaseFirestore.getInstance()
-    private var allMedicines: List<Medicine> = listOf() // Cache for all medicines
+    private var allMedicines: List<Medicine> = listOf()
+    private var hasShownNoResults = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,13 +41,13 @@ class MedicineSearchFragment : Fragment() {
         setupRecyclerView()
         setupSearchView()
         setupSearchTextColors()
-        fetchAllMedicines() // Fetch all medicines once when the view is created
+        fetchAllMedicines()
     }
 
     private fun setupRecyclerView() {
         adapter = MedicineAdapter(emptyList()) { medicine ->
             val bundle = Bundle().apply {
-                putString("medicineName", medicine.brand)
+                putString("medicineName", medicine.name)
             }
             findNavController().navigate(R.id.action_medicine_to_pharmacy, bundle)
         }
@@ -57,7 +58,7 @@ class MedicineSearchFragment : Fragment() {
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let { filterLocalMedicines(it) }
+                filterLocalMedicines(query ?: "")
                 binding.searchView.clearFocus()
                 return true
             }
@@ -69,48 +70,60 @@ class MedicineSearchFragment : Fragment() {
         })
     }
 
-    // New function to fetch all data initially
     private fun fetchAllMedicines() {
+        binding.progressBar.visibility = View.VISIBLE
         Timber.d("Fetching all medicines from Firestore...")
         db.collection("medicines")
             .get()
             .addOnSuccessListener { documents ->
+                // FIXED: Safety check to ensure the fragment is still active before showing alerts or updating UI.
+                if (!isAdded) return@addOnSuccessListener
+
+                binding.progressBar.visibility = View.GONE
                 if (documents.isEmpty) {
                     Timber.w("No medicines found in the database.")
-                    Toast.makeText(context, "No medicine data available", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No medicine data available.", Toast.LENGTH_SHORT).show()
                 } else {
-                    allMedicines = documents.toObjects(Medicine::class.java)
+                    allMedicines = documents.map { document ->
+                        document.toObject(Medicine::class.java).apply {
+                            id = document.id
+                        }
+                    }
                     Timber.d("Successfully fetched and cached ${allMedicines.size} medicines.")
-                    // Initially display all medicines
                     adapter.updateData(allMedicines)
                 }
             }
             .addOnFailureListener { exception ->
+                // FIXED: Safety check to ensure the fragment is still active before showing alerts.
+                if (!isAdded) return@addOnFailureListener
+
+                binding.progressBar.visibility = View.GONE
                 Timber.e(exception, "Failed to fetch medicines.")
-                Toast.makeText(context, "Error: Could not load data.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Could not load medicine data.", Toast.LENGTH_SHORT).show()
             }
     }
 
-    // Renamed and simplified search function to filter the cached list
     private fun filterLocalMedicines(query: String) {
         val searchQuery = query.trim()
         Timber.d("Filtering for: $searchQuery")
 
         if (searchQuery.isEmpty()) {
-            adapter.updateData(allMedicines) // Show all if search is empty
+            adapter.updateData(allMedicines)
+            hasShownNoResults = false
             return
         }
 
-        // Perform case-insensitive search on the local list
         val filteredList = allMedicines.filter { medicine ->
-            medicine.brand.contains(searchQuery, ignoreCase = true) ||
-                    medicine.name.contains(searchQuery, ignoreCase = true)
+            medicine.name.contains(searchQuery, ignoreCase = true)
         }
 
         adapter.updateData(filteredList)
 
-        if (filteredList.isEmpty()) {
-            Toast.makeText(context, "No medicines found for '$searchQuery'", Toast.LENGTH_SHORT).show()
+        if (filteredList.isEmpty() && !hasShownNoResults) {
+            Toast.makeText(context, "No medicines found for '$searchQuery'.", Toast.LENGTH_SHORT).show()
+            hasShownNoResults = true
+        } else if (filteredList.isNotEmpty()) {
+            hasShownNoResults = false
         }
     }
 

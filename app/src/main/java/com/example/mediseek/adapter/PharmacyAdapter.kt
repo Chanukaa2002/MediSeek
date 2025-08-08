@@ -1,7 +1,6 @@
 package com.example.mediseek.adapter
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,19 +16,27 @@ class PharmacyAdapter(
 ) : RecyclerView.Adapter<PharmacyAdapter.PharmacyViewHolder>() {
 
     inner class PharmacyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        // Ensure these IDs exist in your item_pharmacy.xml
         private val nameText: TextView = itemView.findViewById(R.id.pharmacyName)
         private val regNoText: TextView = itemView.findViewById(R.id.pharmacyRegNo)
         private val locationText: TextView = itemView.findViewById(R.id.pharmacyStore)
 
         @SuppressLint("SetTextI18n")
         fun bind(pharmacy: Pharmacy) {
-            nameText.text = pharmacy.name
-            regNoText.text = "Reg: ${pharmacy.regNo}"
-            locationText.text = "Location: ${pharmacy.location}"
+            // FIXED: Using 'username' as the pharmacy name
+            nameText.text = pharmacy.username
+            regNoText.text = "Reg: ${pharmacy.registrationNumber}"
 
-            Log.d("PharmacyAdapter", "Binding: ${pharmacy.name} (ID: ${pharmacy.pharmacyId})")
+            // FIXED: Displaying location from the list
+            if (pharmacy.location.isNotEmpty()) {
+                // You can format this however you like
+                locationText.text = "Location: Lat ${pharmacy.location.getOrNull(0)}, Lon ${pharmacy.location.getOrNull(1)}"
+            } else {
+                locationText.text = "Location: Not Available"
+            }
+
             itemView.setOnClickListener {
-                Log.d("PharmacyAdapter", "Clicked: ${pharmacy.name}")
+                Timber.d("Clicked: ${pharmacy.username}")
                 onItemClick(pharmacy)
             }
         }

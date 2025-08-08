@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +22,7 @@ import com.example.mediseek.databinding.FragmentLivechatBinding
 import com.example.mediseek.model.ChatMessage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import timber.log.Timber
 
 class LiveChatFragment : Fragment() {
 
@@ -34,7 +34,10 @@ class LiveChatFragment : Fragment() {
     private lateinit var dbRef: DatabaseReference
     private lateinit var auth: FirebaseAuth
     private var chatId: String? = null
+
+    // Listeners that need to be managed
     private var childEventListener: ChildEventListener? = null
+    private var initialMessagesListener: ValueEventListener? = null
 
     private val galleryLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -58,41 +61,34 @@ class LiveChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        try {
-            auth = FirebaseAuth.getInstance()
+        auth = FirebaseAuth.getInstance()
 
-            // Validate user is authenticated
-            if (auth.currentUser == null) {
-                Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-                return
-            }
-
-            val pharmacyId = "6UZnsULIzLe8KgxyUWAMC5MdlWp1"
-            val patientId = auth.currentUser?.uid
-
-            chatId = if (patientId != null && pharmacyId.isNotEmpty()) {
-                listOf(patientId, pharmacyId).sorted().joinToString("_")
-            } else {
-                null
-            }
-
-            if (chatId == null) {
-                Toast.makeText(context, "Failed to start chat", Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-                return
-            }
-
-            initViews()
-            setupDatabase()
-            loadInitialMessages()
-            setupClickListeners()
-
-        } catch (e: Exception) {
-            Log.e("LiveChatFragment", "Initialization error", e)
-            Toast.makeText(context, "Error initializing chat", Toast.LENGTH_SHORT).show()
+        if (auth.currentUser == null) {
+            Toast.makeText(context, "Please login first", Toast.LENGTH_SHORT).show()
             findNavController().navigateUp()
+            return
         }
+
+        // This should be dynamic, but using the hardcoded value for now.
+        val pharmacyId = "6UZnsULIzLe8KgxyUWAMC5MdlWp1"
+        val patientId = auth.currentUser?.uid
+
+        chatId = if (patientId != null && pharmacyId.isNotEmpty()) {
+            listOf(patientId, pharmacyId).sorted().joinToString("_")
+        } else {
+            null
+        }
+
+        if (chatId == null) {
+            Toast.makeText(context, "Failed to start chat", Toast.LENGTH_SHORT).show()
+            findNavController().navigateUp()
+            return
+        }
+
+        initViews()
+        setupDatabaseListener()
+        loadInitialMessages()
+        setupClickListeners()
     }
 
     private fun initViews() {
@@ -105,38 +101,39 @@ class LiveChatFragment : Fragment() {
         }
     }
 
-    private fun setupDatabase() {
-        try {
-            dbRef = FirebaseDatabase.getInstance().getReference("chats").child(chatId!!)
+    private fun setupDatabaseListener() {
+        dbRef = FirebaseDatabase.getInstance().getReference("chats").child(chatId!!)
 
-            childEventListener = object : ChildEventListener {
-                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                    val message = snapshot.getValue(ChatMessage::class.java)
-                    message?.let {
-                        if (!messageList.any { m -> m.timestamp == it.timestamp }) {
-                            messageList.add(it)
-                            updateMessages()
-                        }
+        childEventListener = object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                // FIXED: Safety check to prevent crash
+                if (_binding == null) return
+
+                val message = snapshot.getValue(ChatMessage::class.java)
+                message?.let {
+                    if (!messageList.any { m -> m.timestamp == it.timestamp }) {
+                        messageList.add(it)
+                        updateMessages()
                     }
                 }
-
-                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
-                override fun onChildRemoved(snapshot: DataSnapshot) {}
-                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(context, "Database error: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
             }
-            childEventListener?.let { dbRef.addChildEventListener(it) }
-        } catch (e: Exception) {
-            Log.e("LiveChatFragment", "Database setup error", e)
-            Toast.makeText(context, "Database error", Toast.LENGTH_SHORT).show()
+
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildRemoved(snapshot: DataSnapshot) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {
+                Timber.e(error.toException(), "Database child event listener cancelled.")
+            }
         }
+        dbRef.addChildEventListener(childEventListener!!)
     }
 
     private fun loadInitialMessages() {
-        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        initialMessagesListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // FIXED: Safety check to prevent crash
+                if (_binding == null) return
+
                 val loadedMessages = snapshot.children.mapNotNull {
                     it.getValue(ChatMessage::class.java)
                 }
@@ -146,9 +143,10 @@ class LiveChatFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context, "Failed to load messages", Toast.LENGTH_SHORT).show()
+                Timber.e(error.toException(), "Initial message load cancelled.")
             }
-        })
+        }
+        dbRef.addListenerForSingleValueEvent(initialMessagesListener!!)
     }
 
     private fun updateMessages() {
@@ -180,131 +178,106 @@ class LiveChatFragment : Fragment() {
             galleryLauncher.launch(intent)
         } catch (e: Exception) {
             Toast.makeText(context, "Failed to open gallery", Toast.LENGTH_SHORT).show()
-            Log.e("LiveChatFragment", "Image picker error", e)
+            Timber.e(e, "Image picker error")
         }
     }
 
     private fun uploadImage(imageUri: Uri) {
-        try {
-            binding.uploadProgressBar.visibility = View.VISIBLE
-            binding.sendChatButton.isEnabled = false
-            binding.attachButton.isEnabled = false
+        binding.uploadProgressBar.visibility = View.VISIBLE
+        binding.sendChatButton.isEnabled = false
+        binding.attachButton.isEnabled = false
 
-            val userId = auth.currentUser?.uid ?: return
-            val timestamp = System.currentTimeMillis()
-            val fileName = "chat_${userId}_$timestamp"
+        val userId = auth.currentUser?.uid ?: return
+        val timestamp = System.currentTimeMillis()
+        val fileName = "chat_${userId}_$timestamp"
 
-            MediaManager.get().upload(imageUri)
-                .option("public_id", fileName)
-                .option("folder", "mediseek/chat_images")
-                .option("transformation", "w_800,h_800,c_limit,q_auto")
-                .callback(object : UploadCallback {
-                    override fun onStart(requestId: String) {
-                        activity?.runOnUiThread {
-                            Toast.makeText(context, "Uploading image...", Toast.LENGTH_SHORT).show()
+        MediaManager.get().upload(imageUri)
+            .option("public_id", fileName)
+            .option("folder", "mediseek/chat_images")
+            .option("transformation", "w_800,h_800,c_limit,q_auto")
+            .callback(object : UploadCallback {
+                override fun onStart(requestId: String) {}
+
+                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                    // FIXED: Safety check and run on UI thread
+                    activity?.runOnUiThread {
+                        if (_binding == null) return@runOnUiThread
+                        binding.uploadProgressBar.progress = (bytes * 100 / totalBytes).toInt()
+                    }
+                }
+
+                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                    activity?.runOnUiThread {
+                        if (_binding == null) return@runOnUiThread
+                        binding.uploadProgressBar.visibility = View.GONE
+                        binding.sendChatButton.isEnabled = true
+                        binding.attachButton.isEnabled = true
+
+                        val imageUrl = resultData["secure_url"] as? String
+                        if (imageUrl != null) {
+                            sendImageMessage(imageUrl)
+                        } else {
+                            Toast.makeText(context, "Failed to get image URL", Toast.LENGTH_SHORT).show()
                         }
                     }
+                }
 
-                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
-                        activity?.runOnUiThread {
-                            binding.uploadProgressBar.progress = (bytes * 100 / totalBytes).toInt()
-                        }
+                override fun onError(requestId: String, error: ErrorInfo) {
+                    activity?.runOnUiThread {
+                        if (_binding == null) return@runOnUiThread
+                        binding.uploadProgressBar.visibility = View.GONE
+                        binding.sendChatButton.isEnabled = true
+                        binding.attachButton.isEnabled = true
+                        Toast.makeText(context, "Upload failed: ${error.description}", Toast.LENGTH_LONG).show()
                     }
+                }
 
-                    override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-                        activity?.runOnUiThread {
-                            binding.uploadProgressBar.visibility = View.GONE
-                            binding.sendChatButton.isEnabled = true
-                            binding.attachButton.isEnabled = true
-
-                            val imageUrl = resultData["secure_url"] as? String
-                            if (imageUrl != null) {
-                                sendImageMessage(imageUrl)
-                                Toast.makeText(context, "Upload complete", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Failed to get image URL", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }
-
-                    override fun onError(requestId: String, error: ErrorInfo) {
-                        activity?.runOnUiThread {
-                            binding.uploadProgressBar.visibility = View.GONE
-                            binding.sendChatButton.isEnabled = true
-                            binding.attachButton.isEnabled = true
-                            Toast.makeText(context,
-                                "Upload failed: ${error.description}",
-                                Toast.LENGTH_LONG).show()
-                        }
-                    }
-
-                    override fun onReschedule(requestId: String, error: ErrorInfo) {
-                        activity?.runOnUiThread {
-                            Toast.makeText(context, "Upload rescheduled", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                })
-                .dispatch()
-        } catch (e: Exception) {
-            binding.uploadProgressBar.visibility = View.GONE
-            binding.sendChatButton.isEnabled = true
-            binding.attachButton.isEnabled = true
-            Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
-            Log.e("LiveChatFragment", "Image upload error", e)
-        }
+                override fun onReschedule(requestId: String, error: ErrorInfo) {}
+            })
+            .dispatch()
     }
 
     private fun sendMessage(text: String) {
-        try {
-            if (auth.currentUser == null) return
+        val currentUser = auth.currentUser ?: return
+        val message = ChatMessage(
+            senderId = currentUser.uid,
+            text = text,
+            timestamp = System.currentTimeMillis(),
+            type = "text"
+        )
 
-            val message = ChatMessage(
-                senderId = auth.currentUser!!.uid,
-                text = text,
-                timestamp = System.currentTimeMillis(),
-                type = "text"
-            )
-
-            dbRef.push().setValue(message)
-                .addOnSuccessListener {
+        dbRef.push().setValue(message)
+            .addOnSuccessListener {
+                if (_binding != null) {
                     binding.chatMessageInput.setText("")
                 }
-                .addOnFailureListener { e ->
-                    Toast.makeText(context, "Failed to send: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Failed to send message", Toast.LENGTH_SHORT).show()
-            Log.e("LiveChatFragment", "Message send error", e)
-        }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to send: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun sendImageMessage(imageUrl: String) {
-        try {
-            if (auth.currentUser == null) return
+        val currentUser = auth.currentUser ?: return
+        val message = ChatMessage(
+            senderId = currentUser.uid,
+            imageUrl = imageUrl,
+            timestamp = System.currentTimeMillis(),
+            type = "image"
+        )
 
-            val message = ChatMessage(
-                senderId = auth.currentUser!!.uid,
-                imageUrl = imageUrl,
-                timestamp = System.currentTimeMillis(),
-                type = "image"
-            )
-
-            dbRef.push().setValue(message)
-                .addOnFailureListener { e ->
-                    Toast.makeText(context, "Failed to send image: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Failed to send image", Toast.LENGTH_SHORT).show()
-            Log.e("LiveChatFragment", "Image message send error", e)
-        }
+        dbRef.push().setValue(message)
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to send image: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
+    // FIXED: Properly remove all listeners to prevent memory leaks and crashes
     override fun onDestroyView() {
         super.onDestroyView()
-        try {
+        if (this::dbRef.isInitialized) {
             childEventListener?.let { dbRef.removeEventListener(it) }
-        } catch (e: Exception) {
-            Log.e("LiveChatFragment", "Cleanup error", e)
+            initialMessagesListener?.let { dbRef.removeEventListener(it) }
         }
         _binding = null
     }

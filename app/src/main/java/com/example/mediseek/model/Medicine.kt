@@ -6,15 +6,18 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class Medicine(
-    // These property names match your Firestore fields exactly
+    // This ID is set locally after fetching from Firestore. It is NOT a field in your database.
+    var id: String = "",
+
+    // --- Fields from your latest database structure ---
     var brand: String = "",
     var name: String = "",
     var pharmacyId: String = "",
-    var price: Double = 0.0, // Use Double for price
-    var qty: Int = 0,        // Use Int for quantity
+    var price: Double = 0.0,
+    var qty: Int = 0, // This corresponds to 'stock'
     var status: String = "",
 
-    // Use @PropertyName for fields with different names or capitalization
+    // Use @PropertyName for fields with different names, capitalization, or special characters
     @get:PropertyName("EXD") @set:PropertyName("EXD")
     var expiryDate: String = "",
 
@@ -27,7 +30,8 @@ data class Medicine(
     @get:PropertyName("imgURL") @set:PropertyName("imgURL")
     var imageUrl: String = "",
 
-    // IMPORTANT: Add this field to your database for searching
+    // This field is for making search case-insensitive.
+    // You should add this field to your Firestore documents.
     @get:PropertyName("brand_lowercase") @set:PropertyName("brand_lowercase")
     var brandLowercase: String = ""
 ) : Parcelable

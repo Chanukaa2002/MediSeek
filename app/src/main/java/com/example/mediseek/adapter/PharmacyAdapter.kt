@@ -1,6 +1,8 @@
 package com.example.mediseek.adapter
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Geocoder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,7 +10,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mediseek.R
 import com.example.mediseek.model.Pharmacy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.Locale
 
 class PharmacyAdapter(
     private var pharmacies: List<Pharmacy>,
@@ -20,24 +28,59 @@ class PharmacyAdapter(
         private val nameText: TextView = itemView.findViewById(R.id.pharmacyName)
         private val regNoText: TextView = itemView.findViewById(R.id.pharmacyRegNo)
         private val locationText: TextView = itemView.findViewById(R.id.pharmacyStore)
+        private var geocodeJob: Job? = null
 
         @SuppressLint("SetTextI18n")
         fun bind(pharmacy: Pharmacy) {
             // FIXED: Using 'username' as the pharmacy name
+            geocodeJob?.cancel()
             nameText.text = pharmacy.username
             regNoText.text = "Reg: ${pharmacy.registrationNumber}"
 
             // FIXED: Displaying location from the list
-            if (pharmacy.location.isNotEmpty()) {
-                // You can format this however you like
-                locationText.text = "Location: Lat ${pharmacy.location.getOrNull(0)}, Lon ${pharmacy.location.getOrNull(1)}"
+            val latString = pharmacy.location.getOrNull(0)
+            val lonString = pharmacy.location.getOrNull(1)
+
+            if (!latString.isNullOrEmpty() && !lonString.isNullOrEmpty()) {
+                // Set a temporary loading text
+                locationText.text = "Location: Loading..."
+                // Launch a new coroutine and store its job
+                geocodeJob = CoroutineScope(Dispatchers.Main).launch {
+                    val cityName = getCityName(itemView.context, latString, lonString)
+                    locationText.text = "Location: $cityName"
+                }
             } else {
                 locationText.text = "Location: Not Available"
             }
 
+
+
             itemView.setOnClickListener {
                 Timber.d("Clicked: ${pharmacy.username}")
                 onItemClick(pharmacy)
+            }
+        }
+    }
+
+    private suspend fun getCityName(context: Context, latString: String, lonString: String): String {
+        return withContext(Dispatchers.IO) {
+            val lat = latString.toDoubleOrNull()
+            val lon = lonString.toDoubleOrNull()
+
+            if (lat == null || lon == null) {
+                return@withContext "Invalid Coordinates"
+            }
+
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(lat, lon, 1)
+                if (addresses != null && addresses.isNotEmpty()) {
+                    addresses[0].locality ?: "Unknown Area"
+                } else {
+                    "City not found"
+                }
+            } catch (e: Exception) {
+                "Could not determine city"
             }
         }
     }

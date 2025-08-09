@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Reject"
-            android:backgroundTint="#FF4444"
+            android:backgroundTint="@color/color_red"
             android:textColor="@android:color/white"
             android:layout_marginEnd="8dp"/>
 
@@ -52,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Approve"
-            android:backgroundTint="#4CAF50"
+            android:backgroundTint="@color/green"
             android:textColor="@android:color/white"/>
 
     </LinearLayout>

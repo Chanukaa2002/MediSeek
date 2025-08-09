@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "121816247402",
+    "firebase_url": "https://mediseek-81078-default-rtdb.firebaseio.com",
+    "project_id": "mediseek-81078",
+    "storage_bucket": "mediseek-81078.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:121816247402:android:65eb4fc010df13f1efee13",
+        "android_client_info": {
+          "package_name": "com.example.mediseek"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "121816247402-e9m1hact0j50pttivkp407aj0co13pg4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mediseek",
+            "certificate_hash": "644da63b60154d651eaa251c4cd9c2e47d6d5db2"
+          }
+        },
+        {
+          "client_id": "121816247402-nrf45ebml6gat0pn01r1nm2vv5boaief.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mediseek",
+            "certificate_hash": "0c058b18aa1d8d61c4c9b22ce12d6f05b20a9bfb"
+          }
+        },
+        {
+          "client_id": "121816247402-ob0fml4cinsfhs6vl4c5g1ve09p4ujvk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEkSxTuEgDmTuYLU5xg5gece3nmEVAmZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "121816247402-ob0fml4cinsfhs6vl4c5g1ve09p4ujvk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

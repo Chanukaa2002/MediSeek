@@ -63,12 +63,14 @@
                         android:textSize="14sp" />
 
                     <TextView
+                        android:id="@+id/users_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="877"
+                        android:text="0"
                         android:textColor="@color/black"
                         android:textSize="20sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -109,9 +111,10 @@
                         android:textStyle="bold"/>
 
                     <TextView
+                        android:id="@+id/pharmacies_count"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="200"
+                        android:text="0"
                         android:textColor="@color/blue"
                         android:textSize="20sp"
                         android:textStyle="bold" />

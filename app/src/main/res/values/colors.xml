@@ -25,4 +25,6 @@
     <color name="text_secondary">#666666</color>
     <color name="primary_light">#664285F4</color>
     <color name="screen_background_light">#F5F5F5</color>
+    <color name="yellow">#ebc334</color>
+    <color name="bg_search">#EFEFEF</color>
 </resources>

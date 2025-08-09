@@ -20,7 +20,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/ordersImage"
+            android:src="@drawable/ordersimg"
             android:contentDescription="productImage" />
 
         <TextView

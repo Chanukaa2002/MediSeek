@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pharmacy_nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.mediseek.fragments.PharmacyHomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_pharmacy_home" />
+
+    <fragment
+        android:id="@+id/nav_products"
+        android:name="com.example.mediseek.fragments.ProductsFragment"
+        android:label="Products"
+        tools:layout="@layout/fragment_products" />
+
+    <fragment
+        android:id="@+id/nav_chat"
+        android:name="com.example.mediseek.fragments.ChatsFragment"
+        android:label="Chat"
+        tools:layout="@layout/fragment_chats" />
+
+    <fragment
+        android:id="@+id/chat"
+        android:name="com.example.mediseek.fragments.PharmacyChatFragment"
+        android:label="Chat"
+        tools:layout="@layout/fragment_chats" />
+
+    <fragment
+        android:id="@+id/nav_orders"
+        android:name="com.example.mediseek.fragments.OrdersFragment"
+        android:label="Orders"
+        tools:layout="@layout/fragment_orders" />
+
+    <fragment
+        android:id="@+id/nav_add_pro"
+        android:name="com.example.mediseek.fragments.AddDrugFragment"
+        android:label="Add Drug"
+        tools:layout="@layout/fragment_add_drug" />
+
+    <fragment
+        android:id="@+id/nav_scanner"
+        android:name="com.example.mediseek.fragments.ScannerFragment"
+        android:label="Scanner"
+        tools:layout="@layout/fragment_scanner" />
+
+    <fragment
+        android:id="@+id/pharmacyProfileFragment"
+        android:name="com.example.mediseek.fragments.PharmacyProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_pharmacy_profile" />
+</navigation>

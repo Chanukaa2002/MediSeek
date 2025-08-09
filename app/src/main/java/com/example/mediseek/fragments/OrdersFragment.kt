@@ -177,7 +177,7 @@ class OrdersFragment : Fragment(R.layout.fragment_orders), OrdersAdapter.OnItemC
         }
 
         db.collection("Orders")
-//            .whereEqualTo("pharmacyId", currentPharmacyId)
+            .whereEqualTo("pharmacyId", currentPharmacyId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, e ->
                 if (e != null) {

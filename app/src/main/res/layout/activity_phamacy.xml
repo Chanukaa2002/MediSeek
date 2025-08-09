@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/lightGray"
     android:id="@+id/phamacy"
-    >
+    android:fitsSystemWindows="true"> <!-- ADD THIS LINE -->
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayoutPharmacy"

@@ -63,6 +63,25 @@ class PhamacyActivity : AppCompatActivity() {
         navController = navHostFragment.navController
 
         binding.bottomNavigationViewPharmacy.setupWithNavController(navController)
+
+        val profileIcon = binding.toolbarPharmacy.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.profile_pic_p)
+
+        // Set the click listener
+        profileIcon.setOnClickListener {
+            // Navigate to the PharmacyProfileFragment.
+            // Ensure 'R.id.pharmacyProfileFragment' is the correct ID from your pharmacy_nav_graph.xml
+            navController.navigate(R.id.pharmacyProfileFragment)
+        }
+    }
+
+    override fun onBackPressed() {
+        if (navController.currentDestination?.id == navController.graph.startDestinationId) {
+            // If on the start destination, minimize the app
+            moveTaskToBack(true)
+        } else {
+            // Otherwise, perform the default back navigation
+            super.onBackPressed()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

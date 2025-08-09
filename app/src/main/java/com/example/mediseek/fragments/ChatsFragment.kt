@@ -63,12 +63,10 @@ class ChatsFragment : Fragment() {
     }
 
 
-    /**
-     * CORRECTION: Runs the database query in a background coroutine.
-     */
+
     private fun loadChatsFromDb() {
         lifecycleScope.launch {
-            val cachedChats = dbHelper.getAllChats() // This is now a suspend call
+            val cachedChats = dbHelper.getAllChats()
             Log.d("ChatsFragment", "Loaded ${cachedChats.size} chats from local DB.")
             updateUI(cachedChats)
         }
@@ -79,7 +77,6 @@ class ChatsFragment : Fragment() {
 
         realtimeDb.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // CORRECTION: Database saving now happens in a background coroutine.
                 lifecycleScope.launch {
                     if (!snapshot.exists()) {
                         dbHelper.saveChatList(emptyList())
@@ -88,13 +85,6 @@ class ChatsFragment : Fragment() {
                     }
 
                     val fetchedChatItems = mutableListOf<ChatItem>()
-                    // ... (The rest of the Firebase fetching logic is complex to do in coroutines,
-                    // so we can keep it as is, and just save the final result in a coroutine)
-
-                    // The original implementation with counters is fine, but let's simplify for clarity
-                    // (Note: a more advanced implementation would use Kotlin Coroutines for Firebase, but this is a direct fix)
-
-                    // Let's stick to the user's existing logic with a small change for saving.
                     val chatsToProcess = snapshot.children.count()
                     var processedChats = 0
 
@@ -116,7 +106,7 @@ class ChatsFragment : Fragment() {
                                             userId = clientId,
                                             username = document.getString("username") ?: "Unknown",
                                             profileImageUrl = document.getString("imgUrl") ?: "",
-                                            hasNewMessage = false // Your logic for new messages here
+                                            hasNewMessage = false
                                         )
                                     )
                                 }
@@ -124,11 +114,10 @@ class ChatsFragment : Fragment() {
                             .addOnCompleteListener {
                                 processedChats++
                                 if (processedChats == chatsToProcess) {
-                                    // CORRECTION: Save to DB and update UI from a coroutine
                                     lifecycleScope.launch {
                                         Log.d("ChatsFragment", "Fetched ${fetchedChatItems.size} chats from Firebase.")
-                                        dbHelper.saveChatList(fetchedChatItems) // suspend call
-                                        val newCachedChats = dbHelper.getAllChats() // suspend call
+                                        dbHelper.saveChatList(fetchedChatItems)
+                                        val newCachedChats = dbHelper.getAllChats()
                                         updateUI(newCachedChats)
                                     }
                                 }

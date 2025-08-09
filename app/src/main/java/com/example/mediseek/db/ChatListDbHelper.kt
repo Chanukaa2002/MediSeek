@@ -40,9 +40,7 @@ class ChatListDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
     }
 
 
-    /**
-     * CORRECTION: Made this a suspend function to run on a background thread.
-     */
+
     suspend fun saveChatList(chatList: List<ChatItem>) = withContext(Dispatchers.IO) {
         val db = writableDatabase
         db.beginTransaction()
@@ -63,9 +61,7 @@ class ChatListDbHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         }
     }
 
-    /**
-     * CORRECTION: Made this a suspend function to run on a background thread.
-     */
+
     suspend fun getAllChats(): List<ChatItem> = withContext(Dispatchers.IO) {
         val chatList = mutableListOf<ChatItem>()
         val db = readableDatabase

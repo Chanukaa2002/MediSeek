@@ -76,10 +76,7 @@ class ProductsFragment : Fragment(R.layout.fragment_products), ProductsAdapter.O
         productsAdapter.updateData(filteredList)
     }
 
-    /**
-     * Determines the product status based on its expiration date and quantity.
-     * This function now lives inside the fragment.
-     */
+
     private fun determineStatus(expiryDateString: String, quantity: Long): String {
         try {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

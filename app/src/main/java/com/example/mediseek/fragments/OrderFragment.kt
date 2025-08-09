@@ -81,7 +81,6 @@ class OrderFragment : Fragment() {
         placeOrderButton = view.findViewById(R.id.place_order_button)
 
         pharmacyId = arguments?.getString("pharmacyId") ?: ""
-        // FIXED: Use the correct argument key "pharmacyName"
         pharmacyName = arguments?.getString("pharmacyName") ?: "Pharmacy"
         view.findViewById<TextView>(R.id.pharmacy_title).text = pharmacyName
 

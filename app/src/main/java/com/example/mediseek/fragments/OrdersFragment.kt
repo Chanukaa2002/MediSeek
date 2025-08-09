@@ -1,6 +1,9 @@
 package com.example.mediseek.fragments // Or your correct package
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -15,22 +18,42 @@ import com.example.mediseek.R
 import com.example.mediseek.adapter.OrdersAdapter // Make sure this path is correct
 import com.example.mediseek.model.Order
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.tabs.TabLayout
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 // This class now handles launching the scanner and receiving the result.
-class OrdersFragment : Fragment(R.layout.fragment_orders) { // Pass layout to constructor
+class OrdersFragment : Fragment(R.layout.fragment_orders), OrdersAdapter.OnItemClickListener { // Pass layout to constructor
 
     private lateinit var ordersRecyclerView: RecyclerView
     private lateinit var ordersAdapter: OrdersAdapter
-    private var orderList: MutableList<Order> = mutableListOf()
+    private lateinit var tabLayout: TabLayout
+    private var currentFilterStatus = "Pending"
 
     // Declare views for UI elements
     private lateinit var searchEditText: EditText
     private lateinit var searchIconImageView: ImageView
     private lateinit var qrScanButton: ImageButton
 
+    private lateinit var db: FirebaseFirestore
+    private lateinit var auth: FirebaseAuth
+
+    private var fullOrderList: MutableList<Order> = mutableListOf()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        setFragmentResultListener(ScannerFragment.REQUEST_KEY) { _, bundle ->
+            val scannedValue = bundle.getString(ScannerFragment.BUNDLE_KEY)
+            searchEditText.setText(scannedValue)
+            if (!scannedValue.isNullOrEmpty()) {
+                showResultDialog(scannedValue)
+            }
+        }
         // --- STEP 1: Set up the listener to receive the result from ScannerFragment ---
         setFragmentResultListener(ScannerFragment.REQUEST_KEY) { _, bundle ->
             // A result has been received from the scanner.
@@ -50,16 +73,51 @@ class OrdersFragment : Fragment(R.layout.fragment_orders) { // Pass layout to co
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        db = FirebaseFirestore.getInstance()
+        auth = FirebaseAuth.getInstance()
+
         // Initialize views from the inflated layout
         ordersRecyclerView = view.findViewById(R.id.order_recycler_view)
         searchEditText = view.findViewById(R.id.et_search_id)
         searchIconImageView = view.findViewById(R.id.iv_search_icon)
         qrScanButton = view.findViewById(R.id.btn_qr_scan)
+        tabLayout = view.findViewById(R.id.tab_layout_orders)
 
         setupRecyclerView()
-        loadOrders()
+        setupSearchListener()
+        loadOrdersFromFirestore()
+        setupTabLayoutListener()
         setupQrScanButton() // Set up the listener for our button
     }
+
+    private fun setupTabLayoutListener() {
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                currentFilterStatus = tab?.text.toString()
+                filterOrders(searchEditText.text.toString()) // Re-filter list when tab changes
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+    }
+
+    private fun setupSearchListener() {
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                filterOrders(s.toString())
+            }
+        })
+    }
+
+    override fun onItemClick(orderId: String) {
+        // Show the details dialog when an order card is clicked
+        OrderDetailsDialogFragment.newInstance(orderId)
+            .show(parentFragmentManager, OrderDetailsDialogFragment.TAG)
+    }
+
+
 
     private fun showResultDialog(scannedValue: String) {
         AlertDialog.Builder(requireContext())
@@ -75,10 +133,8 @@ class OrdersFragment : Fragment(R.layout.fragment_orders) { // Pass layout to co
     }
 
     private fun setupRecyclerView() {
-        if (ordersRecyclerView.layoutManager == null) {
-            ordersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        }
-        ordersAdapter = OrdersAdapter(orderList)
+        ordersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        ordersAdapter = OrdersAdapter(mutableListOf(),this)
         ordersRecyclerView.adapter = ordersAdapter
     }
 
@@ -95,36 +151,69 @@ class OrdersFragment : Fragment(R.layout.fragment_orders) { // Pass layout to co
         findNavController().navigate(R.id.nav_scanner)
     }
 
-    private fun loadOrders() {
-        // This is your existing sample data logic.
-        val sampleOrders = listOf(
-            Order(
-                orderId = "OID : 00012",
-                itemsSummary = "Panadol 02 cards, Vitamin C",
-                totalPrice = "$3.00",
-                orderDate = "5 June, 2022",
-                status = "Processing",
-                statusBackgroundColor = R.color.yellow
-            ),
-            Order(
-                orderId = "OID : 00015",
-                itemsSummary = "Antibiotics, Painkillers",
-                totalPrice = "$15.50",
-                orderDate = "10 June, 2022",
-                status = "Delivered",
-                statusBackgroundColor = R.color.lightGreen
-            ),
-            Order(
-                orderId = "OID : 00010",
-                itemsSummary = "Bandages",
-                totalPrice = "$2.00",
-                orderDate = "1 June, 2022",
-                status = "Cancelled",
-                statusBackgroundColor = R.color.red
-            )
-        )
-        orderList.clear()
-        orderList.addAll(sampleOrders)
-        ordersAdapter.updateData(orderList) // Assuming your adapter has this method
+    private fun filterOrders(query: String) {
+        // First, filter by the selected tab status ("Pending" or "Done")
+        val statusFilteredList = fullOrderList.filter {
+            it.status.equals(currentFilterStatus, ignoreCase = true)
+        }
+
+        // Then, filter by the search query
+        val finalList = if (query.isEmpty()) {
+            statusFilteredList
+        } else {
+            statusFilteredList.filter {
+                it.orderId.contains(query, ignoreCase = true)
+            }
+        }
+        ordersAdapter.updateData(finalList)
+    }
+
+
+    private fun loadOrdersFromFirestore() {
+        val currentPharmacyId = auth.currentUser?.uid
+        if (currentPharmacyId == null) {
+            Log.w("OrdersFragment", "User not logged in.")
+            return
+        }
+
+        db.collection("Orders")
+//            .whereEqualTo("pharmacyId", currentPharmacyId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.w("OrdersFragment", "Listen failed.", e)
+                    return@addSnapshotListener
+                }
+
+                val newOrderList = mutableListOf<Order>()
+                if (snapshots != null) {
+                    for (doc in snapshots) {
+                        val paymentStatus = doc.getString("paymentStatus") ?: ""
+                        val status = if (paymentStatus == "completed") "Pending" else "Done"
+                        val statusColor = if (status == "Pending") R.color.yellow else R.color.lightGreen
+
+                        val orderIdFull = doc.getString("orderId") ?: ""
+                        val formattedOrderId = "OID : ${orderIdFull}"
+
+                        val createdAtTimestamp = doc.getTimestamp("createdAt") ?: Timestamp.now()
+                        val formattedDate = SimpleDateFormat("d MMMM, yyyy", Locale.getDefault()).format(createdAtTimestamp.toDate())
+
+                        val order = Order(
+                            id = doc.id,
+                            orderId = formattedOrderId,
+                            itemsSummary = doc.getString("prescription") ?: "No description",
+                            totalPrice = "Rs.${String.format("%.2f", doc.getDouble("totalAmount") ?: 0.0)}",
+                            orderDate = formattedDate,
+                            status = status,
+                            statusBackgroundColor = statusColor
+                        )
+                        newOrderList.add(order)
+                    }
+                }
+                fullOrderList.clear()
+                fullOrderList.addAll(newOrderList)
+                // Apply initial filter based on the default selected tab
+                filterOrders(searchEditText.text.toString())
+            }
     }
 }

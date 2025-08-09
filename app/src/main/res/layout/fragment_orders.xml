@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FAFAFA"
-    tools:context=".OrderListFragment">
+    tools:context=".OrdersFragment">
 
     <!-- Search Bar Layout -->
     <LinearLayout
@@ -36,7 +36,6 @@
                 android:paddingStart="24dp"
                 android:paddingEnd="24dp"
                 android:textSize="16sp" />
-
         </androidx.cardview.widget.CardView>
 
         <ImageView
@@ -48,15 +47,39 @@
             android:contentDescription="search_icon_desc"
             android:padding="12dp"
             android:src="@drawable/search" />
-
     </LinearLayout>
+
+    <!-- ADDED: TabLayout for Pending/Done navigation -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout_orders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/search_layout"
+        app:tabGravity="fill"
+        app:tabIndicatorColor="@color/mainColor"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="@color/mainColor"
+        app:tabTextColor="@color/gray">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pending" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Done" />
+
+    </com.google.android.material.tabs.TabLayout>
+
 
     <!-- Order List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/order_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/search_layout"
+        android:layout_below="@id/tab_layout_orders"
         android:clipToPadding="false"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
@@ -75,8 +98,6 @@
         android:contentDescription="scan_qr_code"
         android:scaleType="fitCenter"
         android:src="@drawable/qr"
-        app:backgroundTint="@color/lightGreen"
-
-        />
+        app:backgroundTint="@color/lightGreen" />
 
 </RelativeLayout>

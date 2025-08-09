@@ -1,10 +1,12 @@
 package com.example.mediseek.model
 
+// This data class now mirrors the structure needed to hold data from your Firestore 'Orders' collection.
 data class Order(
-    val orderId: String,
-    val itemsSummary: String, // e.g., "Panadol 02 cards, Vitamin C"
-    val totalPrice: String,   // e.g., "$3.00"
-    val orderDate: String,    // e.g., "5 June, 2022"
-    val status: String,       // e.g., "Processing"
-    val statusBackgroundColor: Int // To hold R.color.yellow or other color resource ID
+    val id: String, // The document ID from Firestore
+    val orderId: String, // Formatted Order ID (e.g., "OID : 12345")
+    val itemsSummary: String, // From the 'prescription' field
+    val totalPrice: String,   // Formatted total amount (e.g., "Rs. 1000.00")
+    val orderDate: String,    // Formatted creation date
+    val status: String,       // "Pending" or "Done"
+    val statusBackgroundColor: Int // R.color.yellow or R.color.lightGreen
 )

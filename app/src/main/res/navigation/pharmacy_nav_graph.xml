@@ -46,4 +46,10 @@
         android:name="com.example.mediseek.fragments.ScannerFragment"
         android:label="Scanner"
         tools:layout="@layout/fragment_scanner" />
+
+    <fragment
+        android:id="@+id/pharmacyProfileFragment"
+        android:name="com.example.mediseek.fragments.PharmacyProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_pharmacy_profile" />
 </navigation>

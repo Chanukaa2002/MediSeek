@@ -83,13 +83,15 @@ class ClientActivity : AppCompatActivity() {
         finish() // Finish the current activity
     }
 
-    /**
-     * This function handles the Up button navigation in the toolbar.
-     * It's automatically called when the user presses the Up button.
-     */
+    override fun onBackPressed() {
+        if (navController.currentDestination?.id == navController.graph.startDestinationId) {
+            moveTaskToBack(true)
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     override fun onSupportNavigateUp(): Boolean {
-        // Let the NavController handle the Up navigation.
-        // Fallback to the default implementation if NavController can't handle it.
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 }
